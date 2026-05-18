@@ -1,11 +1,9 @@
 package com.pokect.bank.kids.ui.screens.ranking
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,14 +17,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +55,6 @@ import com.pokect.bank.kids.ui.theme.PokectBankMuted
 import com.pokect.bank.kids.ui.theme.PokectBankMutedForeground
 import com.pokect.bank.kids.ui.theme.PokectBankOnSurface
 import com.pokect.bank.kids.ui.theme.PokectBankPrimary
-import com.pokect.bank.kids.ui.theme.PokectBankSuccess
 import com.pokect.bank.kids.ui.theme.PokectBankSurface
 import com.pokect.bank.kids.ui.theme.PokectBankWarning
 import java.time.Duration
