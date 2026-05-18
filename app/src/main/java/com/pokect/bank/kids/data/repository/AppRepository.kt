@@ -363,7 +363,7 @@ class AppRepository {
     private fun createSeedWeeklyChallenges() = listOf(
         WeeklyChallenge(
             id = "wc1",
-            title = "Economia da Semana",
+            title = "🏆 Desafio da semana",
             description = "Guarde pelo menos R\$20 esta semana para ganhar recompensas extras",
             rewardXp = 200,
             rewardCoins = 40,

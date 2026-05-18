@@ -81,12 +81,23 @@ fun RankingScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             item {
-                Text(
-                    text = "🏆 Ranking da Família",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PokectBankOnSurface
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "🏆 Ranking da Família",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PokectBankOnSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Quem economiza mais essa semana?",
+                        fontSize = 18.sp,
+                        color = PokectBankMutedForeground
+                    )
+                }
             }
 
             if (uiState.members.isNotEmpty()) {
@@ -127,9 +138,9 @@ private fun PodiumSection(
         verticalAlignment = Alignment.Bottom,
         modifier = modifier.fillMaxWidth()
     ) {
-        PodiumColumn(member = second.member, position = 2, height = 120.dp, delayMs = 100)
-        PodiumColumn(member = first.member, position = 1, height = 160.dp, delayMs = 0, isFirst = true)
-        PodiumColumn(member = third.member, position = 3, height = 100.dp, delayMs = 200)
+        PodiumColumn(member = second.member, position = 2, height = 100.dp, delayMs = 100)
+        PodiumColumn(member = first.member, position = 1, height = 140.dp, delayMs = 0, isFirst = true)
+        PodiumColumn(member = third.member, position = 3, height = 80.dp, delayMs = 200)
     }
 }
 
@@ -164,13 +175,7 @@ private fun PodiumColumn(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .scale(scale)
-            .width(100.dp)
-            .height(height)
-            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-            .background(background)
-            .padding(8.dp)
+        modifier = modifier.scale(scale)
     ) {
         if (isFirst) {
             FloatingCrown()
@@ -182,23 +187,34 @@ private fun PodiumColumn(
             showLevel = false
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "${position}°",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (position == 1) Color.White else PokectBankOnSurface
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .width(125.dp)
+                .height(height)
+                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                .background(background)
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "${position}°",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (position == 1) Color.White else PokectBankOnSurface
+            )
 
-        Text(
-            text = member.name,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (position == 1) Color.White else PokectBankOnSurface,
-            maxLines = 1,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = member.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (position == 1) Color.White else PokectBankOnSurface,
+                maxLines = 1,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
@@ -318,33 +334,25 @@ private fun WeeklyChallengeCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = KidShapes.large,
-        colors = CardDefaults.cardColors(containerColor = PokectBankSurface)
+        colors = CardDefaults.cardColors(containerColor = PokectBankPrimary.copy())
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .background(GradientPresets.gradientPrimary)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = challenge.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = PokectBankOnSurface
+                color = Color.White
             )
 
             Text(
                 text = challenge.description,
                 fontSize = 14.sp,
-                color = PokectBankMutedForeground,
+                color = Color.White.copy(alpha = 0.8f),
                 modifier = Modifier.padding(top = 8.dp)
             )
 
@@ -352,16 +360,8 @@ private fun WeeklyChallengeCard(
                 text = "⭐ ${challenge.rewardXp} XP  🪙 ${challenge.rewardCoins} moedas",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = PokectBankPrimary,
+                color = Color.White.copy(alpha = 0.9f),
                 modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Text(
-                text = "$days dias $hours horas",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = PokectBankPrimary,
-                modifier = Modifier.padding(top = 12.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -372,21 +372,36 @@ private fun WeeklyChallengeCard(
                         .fillMaxWidth()
                         .height(48.dp)
                         .clip(KidShapes.medium)
-                        .background(PokectBankSuccess.copy(alpha = 0.2f)),
+                        .background(Color.White.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "✓ Participando",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PokectBankSuccess
+                        color = Color.White
                     )
                 }
             } else {
-                PressableCtaButton(
-                    text = "Participar",
-                    onClick = onJoin
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "$days dias $hours horas",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    PressableCtaButton(
+                        text = "Participar",
+                        onClick = onJoin,
+                        modifier = Modifier.width(140.dp)
+                    )
+                }
             }
         }
     }
@@ -413,7 +428,7 @@ private fun PressableCtaButton(
             .height(48.dp)
             .scale(scale)
             .clip(KidShapes.medium)
-            .background(GradientPresets.gradientPrimary)
+            .background(GradientPresets.gradientSuccess)
             .clickable(onClick = {
                 scale = 0.95f
                 onClick()
