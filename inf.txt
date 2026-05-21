@@ -1,0 +1,23 @@
+
+### Testes realizados
+| Test | Expected | Result |
+|------|----------|--------|
+| 1. Login persistente | Login sobrevive a app restart | pass |
+| 2. Depósito persiste | Saldo preservado após restart | pass |
+| 3. Histórico sobrevive | Transações preservadas após restart | pass |
+| 4. Metas persistem | Metas criadas preservadas | pass |
+| 5. Alocação persiste | Valor alocado preservado | pass |
+| 6. Recompensa persiste | Resgate preservado | pass |
+| 7. Ranking persiste | XP preservado no ranking | pass |
+| 8. Reset — diálogo | AlertDialog com título/texto/botões corretos | pass |
+| 9. Reset — cancelar | Diálogo fecha, dados intactos | pass |
+| 10. Reset — confirmar | DB resetado, seed data restaurado | pass |
+| 11. Login loading state | Loading spinner sem flash da HomeScreen | pass |
+| 12. Goal allocation no histórico | Transação GOAL aparece no histórico | pass |
+
+### funções feitas
+- Dados que antes morriam no reinicio do app agora persistem via Room SQLite
+- Login state persiste via DataStore Preferences
+- Reset button com confirmação restaura dados seed
+- API pública do AppRepository inalterada — todos os 6 ViewModels funcionam sem modificação
+- 5 Mutex removidos, syncCurrentUser bug fix aplicado
