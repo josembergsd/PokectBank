@@ -19,7 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -28,7 +30,9 @@ import com.pokect.bank.kids.di.AppContainer
 import com.pokect.bank.kids.ui.navigation.PokectBankNavGraph
 import com.pokect.bank.kids.ui.navigation.Screen
 import com.pokect.bank.kids.ui.navigation.bottomNavTabs
+import com.pokect.bank.kids.ui.screens.login.LoginScreen
 import com.pokect.bank.kids.ui.screens.login.LoginViewModel
+import com.pokect.bank.kids.ui.screens.login.LoginViewModelFactory
 import com.pokect.bank.kids.ui.theme.PokectBankTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +41,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PokectBankTheme {
-                val loginViewModel: LoginViewModel = viewModel()
+                val loginViewModel: LoginViewModel = viewModel(
+                    factory = LoginViewModelFactory(
+                        (LocalContext.current.applicationContext as PokectBankApplication).container.authRepository
+                    )
+                )
                 val authState by loginViewModel.uiState.collectAsStateWithLifecycle()
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -94,4 +102,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PreviewLogin() {
+    LoginScreen(
+        onLoginSuccess = { }
+    )
 }

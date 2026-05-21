@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -77,6 +78,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pokect.bank.R
+import com.pokect.bank.kids.PokectBankApplication
 import com.pokect.bank.kids.data.models.AvatarOption
 import com.pokect.bank.kids.ui.theme.GradientPresets
 import com.pokect.bank.kids.ui.theme.PokectBankPrimary
@@ -84,7 +86,11 @@ import kotlin.math.roundToInt
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
+    viewModel: LoginViewModel = viewModel(
+        factory = LoginViewModelFactory(
+            (LocalContext.current.applicationContext as PokectBankApplication).container.authRepository
+        )
+    ),
     onLoginSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

@@ -1,7 +1,9 @@
 package com.pokect.bank.kids.ui.screens.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pokect.bank.kids.data.repository.login.AuthRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +24,9 @@ data class LoginUiState(
     val error: String? = null
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    val authRepository: AuthRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
@@ -101,11 +105,26 @@ class LoginViewModel : ViewModel() {
             return
         }
 
-        _uiState.update { it.copy(isLoading = true, error = null) }
-
         viewModelScope.launch {
-            delay(1500)
-            _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            val state = _uiState.value
+            try {
+                if (state.isLoginTab) {
+                    authRepository.login(state.email, state.password)
+                } else {
+                    authRepository.register(
+                        email = state.email,
+                        password = state.password,
+                        name = state.name,
+                        avatarId = state.selectedAvatar
+                    )
+                }
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+            } catch (e: Exception) {
+                Log.e("LOGIN_VM", "ERROR AUTH", e)
+                _uiState.update { it.copy(isLoading = false, error = "${e.message}") }
+            }
         }
     }
 
