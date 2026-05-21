@@ -7,6 +7,7 @@ lifecycleRuntime = "2.8.7"
 activityCompose = "1.9.3"
 junit = "4.13.2"
 coroutines = "1.8.1"
+uiText = "1.11.1"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -24,6 +25,7 @@ activity-compose = { group = "androidx.activity", name = "activity-compose", ver
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
