@@ -22,10 +22,10 @@ Refatoração da camada de persistência do PokectBank: substituir o armazenamen
 **Plans**: 4 plans — **Status: PLANNED**
 
 Plans:
-- [ ] **01-01-PLAN.md** — Build setup + DataStore Login: KSP 2.1.0-1.0.29 + Room 2.8.4 + DataStore 1.2.1 no Gradle, LoginPreferencesManager com Flow<LoginPrefsData>, LoginViewModel consome DataStore, MainActivity auth gate de 3 estados
-- [ ] **01-02-PLAN.md** — Room Foundation: PokectBankConverters (14 TypeConverters), 7 modelos anotados com @Entity(tableName), 7 DAOs com Flow<T> observe, PokectBankDatabase singleton com seed via execSQL() em onCreate()
-- [ ] **01-03-PLAN.md** — AppRepository Refactor: Substituir MutableStateFlow + 5 Mutex por DAO Flow→StateFlow bridge (repositoryScope.launch+collect), @Transaction write methods, remover createSeed*(), preservar API pública idêntica
-- [ ] **01-04-PLAN.md** — Reset + Tests + Wiring: ResetSection + AlertDialog M3 na HomeScreen, AppRepository.resetData(), AppContainer.resetRepository(), distinctUntilChanged nos ViewModels, Testes de TypeConverter (round-trip) + DAO (inMemoryDatabase) + AppRepositoryTest migrado
+- [x] **01-01-PLAN.md** — Build setup + DataStore Login: KSP 2.1.0-1.0.29 + Room 2.8.4 + DataStore 1.2.1 no Gradle, LoginPreferencesManager com Flow<LoginPrefsData>, LoginViewModel consome DataStore, MainActivity auth gate de 3 estados
+- [x] **01-02-PLAN.md** — Room Foundation: PokectBankConverters (14 TypeConverters), 7 modelos anotados com @Entity(tableName), 7 DAOs com Flow<T> observe, PokectBankDatabase singleton com seed via execSQL() em onCreate()
+- [x] **01-03-PLAN.md** — AppRepository Refactor: Substituir MutableStateFlow + 5 Mutex por DAO Flow→StateFlow bridge (repositoryScope.launch+collect), @Transaction write methods, remover createSeed*(), preservar API pública idêntica
+- [x] **01-04-PLAN.md** — Reset + Tests + Wiring: ResetSection + AlertDialog M3 na HomeScreen, AppRepository.resetData(), AppContainer.resetRepository(), distinctUntilChanged nos ViewModels, Testes de TypeConverter (round-trip) + DAO (inMemoryDatabase) + AppRepositoryTest migrado
 
 ## Progress
 
