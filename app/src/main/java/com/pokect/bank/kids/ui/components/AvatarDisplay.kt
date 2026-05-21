@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -26,7 +27,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -92,7 +92,7 @@ fun AvatarDisplay(
             .clickable { isPressed = !isPressed },
         contentAlignment = Alignment.Center
     ) {
-        // Gradient circle background
+
         Box(
             modifier = Modifier
                 .size(circleSize)
@@ -100,13 +100,12 @@ fun AvatarDisplay(
                 .background(avatarData.gradient),
             contentAlignment = Alignment.Center
         ) {
-            // Face: eyes + smile
+
             Canvas(modifier = Modifier.size(circleSize)) {
                 val canvasSize = this.size
                 val cx = canvasSize.width / 2f
                 val cy = canvasSize.height / 2f
 
-                // Eyes (two black dots)
                 drawCircle(
                     color = Color(0xFF1A1A2E),
                     radius = eyeRadius.toPx(),
@@ -118,7 +117,6 @@ fun AvatarDisplay(
                     center = Offset(cx + eyeSpacing.toPx(), eyeOffsetY.toPx())
                 )
 
-                // Smile (curved arc)
                 smilePath.reset()
                 val smileStartX = cx - circleSize.toPx() * 0.15f
                 val smileEndX = cx + circleSize.toPx() * 0.15f
@@ -134,7 +132,6 @@ fun AvatarDisplay(
             }
         }
 
-        // Accessory (level 3+)
         if (avatarData.accessory.isNotEmpty()) {
             Box(
                 modifier = Modifier
@@ -148,9 +145,8 @@ fun AvatarDisplay(
             }
         }
 
-        // Sparkles (level 5+)
         if (avatarData.hasSparkles) {
-            // Top-right sparkle
+
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -161,7 +157,7 @@ fun AvatarDisplay(
                     fontSize = sparkleSize
                 )
             }
-            // Bottom-left sparkle
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -174,15 +170,12 @@ fun AvatarDisplay(
             }
         }
 
-        // Level badge (bottom-right)
         if (showLevel) {
             Box(
                 modifier = Modifier
                     .size(badgeSize)
-                    .graphicsLayer {
-                        translationX = badgeSize.toPx() * 0.3f
-                        translationY = badgeSize.toPx() * 0.3f
-                    }
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (badgeSize * 0.45f), y = (badgeSize * 0.25f))
                     .clip(CircleShape)
                     .background(Color(0xFF6366F1)),
                 contentAlignment = Alignment.Center
