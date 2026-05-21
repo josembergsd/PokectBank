@@ -1,5 +1,6 @@
 package com.pokect.bank.kids.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.pokect.bank.kids.data.local.PokectBankDatabase
 import com.pokect.bank.kids.data.local.dao.FamilyMemberDao
@@ -25,6 +26,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -253,6 +255,18 @@ class AppRepository(
 
             broadcastEvent(RepositoryEvent.GoalsChanged)
             broadcastEvent(RepositoryEvent.UserUpdated)
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun resetData(context: Context): Result<Unit> {
+        return try {
+            repositoryScope.cancel()
+            PokectBankDatabase.resetInstance(context)
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
