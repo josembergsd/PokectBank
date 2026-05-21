@@ -60,7 +60,7 @@ abstract class PokectBankDatabase : RoomDatabase() {
                     PokectBankDatabase::class.java,
                     DB_NAME
                 )
-                    .addCallback(SeedDatabaseCallback())
+                    .addCallback(PokectBankDatabase.SeedDatabaseCallback())
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }
@@ -75,7 +75,18 @@ abstract class PokectBankDatabase : RoomDatabase() {
             }
         }
 
-        private class SeedDatabaseCallback : RoomDatabase.Callback() {
+        fun getTestInstance(context: Context): PokectBankDatabase {
+            return Room.inMemoryDatabaseBuilder(
+                context.applicationContext,
+                PokectBankDatabase::class.java
+            )
+                .addCallback(PokectBankDatabase.SeedDatabaseCallback())
+                .allowMainThreadQueries()
+                .build()
+        }
+    }
+
+    class SeedDatabaseCallback : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
 
@@ -156,5 +167,4 @@ abstract class PokectBankDatabase : RoomDatabase() {
                 )
             }
         }
-    }
 }

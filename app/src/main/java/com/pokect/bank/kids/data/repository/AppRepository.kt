@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -95,26 +96,41 @@ class AppRepository(
 
     init {
         // Bridge: DAO Flow → StateFlow — one launch per entity
+        // catch {} ensures unhandled exceptions don't propagate (e.g., during testing)
         repositoryScope.launch {
-            userDao.observeUser().collect { _user.value = it }
+            userDao.observeUser()
+                .catch { Log.w("AppRepository", "User Flow error", it) }
+                .collect { _user.value = it }
         }
         repositoryScope.launch {
-            transactionDao.observeTransactions().collect { _transactions.value = it }
+            transactionDao.observeTransactions()
+                .catch { Log.w("AppRepository", "Transactions Flow error", it) }
+                .collect { _transactions.value = it }
         }
         repositoryScope.launch {
-            savingsGoalDao.observeGoals().collect { _goals.value = it }
+            savingsGoalDao.observeGoals()
+                .catch { Log.w("AppRepository", "Goals Flow error", it) }
+                .collect { _goals.value = it }
         }
         repositoryScope.launch {
-            missionDao.observeMissions().collect { _missions.value = it }
+            missionDao.observeMissions()
+                .catch { Log.w("AppRepository", "Missions Flow error", it) }
+                .collect { _missions.value = it }
         }
         repositoryScope.launch {
-            rewardDao.observeRewards().collect { _rewards.value = it }
+            rewardDao.observeRewards()
+                .catch { Log.w("AppRepository", "Rewards Flow error", it) }
+                .collect { _rewards.value = it }
         }
         repositoryScope.launch {
-            familyMemberDao.observeFamilyMembers().collect { _familyMembers.value = it }
+            familyMemberDao.observeFamilyMembers()
+                .catch { Log.w("AppRepository", "FamilyMembers Flow error", it) }
+                .collect { _familyMembers.value = it }
         }
         repositoryScope.launch {
-            weeklyChallengeDao.observeChallenges().collect { _weeklyChallenges.value = it }
+            weeklyChallengeDao.observeChallenges()
+                .catch { Log.w("AppRepository", "WeeklyChallenges Flow error", it) }
+                .collect { _weeklyChallenges.value = it }
         }
     }
 

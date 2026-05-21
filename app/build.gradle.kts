@@ -81,5 +81,6 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.compose.ui.test.junit4)
     testImplementation(libs.androidx.test.core)
+    testImplementation(libs.robolectric)
     debugImplementation(libs.compose.ui.test.manifest)
 }

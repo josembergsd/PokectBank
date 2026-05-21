@@ -12,6 +12,7 @@ junit = "4.13.2"
 coroutines = "1.8.1"
 uiText = "1.11.1"
 androidxTestCore = "1.6.1"
+robolectric = "4.14.1"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -35,6 +36,7 @@ kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.re
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

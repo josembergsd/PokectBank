@@ -1,28 +1,27 @@
 package com.pokect.bank.kids.ui.screens.missions
 
+import com.pokect.bank.kids.data.local.TestDatabaseHelper
 import com.pokect.bank.kids.data.models.MissionCategory
 import com.pokect.bank.kids.data.models.MissionStatus
-import com.pokect.bank.kids.data.repository.AppRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class MissionsViewModelTest {
-
-    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(Dispatchers.Unconfined)
     }
 
     @After
@@ -31,9 +30,10 @@ class MissionsViewModelTest {
     }
 
     @Test
-    fun `initial state loads all missions from repository`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `initial state loads all missions from repository`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
         val vm = MissionsViewModel(repo)
+        delay(500)
         val state = vm.uiState.value
 
         assertEquals(4, state.allMissions.size)
@@ -41,9 +41,10 @@ class MissionsViewModelTest {
     }
 
     @Test
-    fun `filter ALL returns all missions`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `filter ALL returns all missions`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
         val vm = MissionsViewModel(repo)
+        delay(500)
 
         vm.selectFilter(MissionFilterCategory.ALL)
 
@@ -51,41 +52,48 @@ class MissionsViewModelTest {
     }
 
     @Test
-    fun `filter DAILY returns only DAILY category missions`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `filter DAILY returns only DAILY category missions`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
         val vm = MissionsViewModel(repo)
+        delay(500)
 
         vm.selectFilter(MissionFilterCategory.DAILY)
 
         val filtered = vm.uiState.value.filteredMissions
         assertTrue(filtered.all { it.category == MissionCategory.DAILY })
+        Unit
     }
 
     @Test
-    fun `filter WEEKLY returns only WEEKLY category missions`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `filter WEEKLY returns only WEEKLY category missions`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
         val vm = MissionsViewModel(repo)
+        delay(500)
 
         vm.selectFilter(MissionFilterCategory.WEEKLY)
 
         val filtered = vm.uiState.value.filteredMissions
         assertTrue(filtered.all { it.category == MissionCategory.WEEKLY })
+        Unit
     }
 
     @Test
-    fun `filter SPECIAL returns only SPECIAL category missions`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `filter SPECIAL returns only SPECIAL category missions`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
         val vm = MissionsViewModel(repo)
+        delay(500)
 
         vm.selectFilter(MissionFilterCategory.SPECIAL)
 
         val filtered = vm.uiState.value.filteredMissions
         assertTrue(filtered.all { it.category == MissionCategory.SPECIAL })
+        Unit
     }
 
     @Test
-    fun `Mission model has required fields`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `Mission model has required fields`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
+        delay(500)
         val mission = repo.getMissions().first()
 
         assertTrue(mission.icon.isNotEmpty())
@@ -94,6 +102,7 @@ class MissionsViewModelTest {
         assertTrue(mission.progress >= 0)
         assertTrue(mission.xp > 0)
         assertTrue(mission.coins >= 0)
+        Unit
     }
 
     @Test
@@ -103,6 +112,7 @@ class MissionsViewModelTest {
         assertTrue(MissionStatus.entries.contains(MissionStatus.AVAILABLE))
         assertTrue(MissionStatus.entries.contains(MissionStatus.IN_PROGRESS))
         assertTrue(MissionStatus.entries.contains(MissionStatus.COMPLETED))
+        Unit
     }
 
     @Test
@@ -111,6 +121,7 @@ class MissionsViewModelTest {
         assertTrue(MissionCategory.entries.contains(MissionCategory.DAILY))
         assertTrue(MissionCategory.entries.contains(MissionCategory.WEEKLY))
         assertTrue(MissionCategory.entries.contains(MissionCategory.SPECIAL))
+        Unit
     }
 
     @Test
@@ -119,16 +130,16 @@ class MissionsViewModelTest {
     }
 
     @Test
-    fun `MissionsChanged event reloads missions`() = runTest(testDispatcher) {
-        val repo = AppRepository()
+    fun `MissionsChanged event reloads missions`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
         val vm = MissionsViewModel(repo)
+        delay(500)
         val initialCount = vm.uiState.value.allMissions.size
 
         // Join weekly challenge which creates a new mission and emits MissionsChanged
         repo.joinWeeklyChallenge("wc1")
 
-        // Wait for the event to propagate and ViewModel to reload
-        kotlinx.coroutines.delay(200)
+        delay(500)
 
         assertEquals(initialCount + 1, vm.uiState.value.allMissions.size)
     }
