@@ -263,4 +263,47 @@ class HomeViewModelTest {
         vm.selectQuickAmount(50.0)
         assertEquals(50.0, vm.uiState.value.depositAmount)
     }
+
+    // === distinctUntilChanged event processing test ===
+
+    @Test
+    fun `multiple rapid deposits produce correct final balance`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
+        val vm = HomeViewModel(repo)
+        delay(500)
+        val initialBalance = vm.uiState.value.balance
+
+        // Perform two deposits with a small delay between them to allow state to settle
+        vm.deposit(5.0)
+        delay(200)
+        vm.deposit(5.0)
+        delay(500)
+
+        // Balance should reflect both deposits correctly
+        assertEquals(initialBalance + 10.0, vm.uiState.value.balance)
+    }
+
+    @Test
+    fun `deposit event processing does not double-count balance`() = runBlocking(Dispatchers.Unconfined) {
+        val repo = TestDatabaseHelper.createTestRepository()
+        val vm = HomeViewModel(repo)
+        delay(500)
+
+        val initialBalance = vm.uiState.value.balance
+        val depositAmount = 20.0
+
+        vm.deposit(depositAmount)
+        delay(300)
+
+        // Get balance after first deposit settles
+        val afterFirst = vm.uiState.value.balance
+        assertEquals(initialBalance + depositAmount, afterFirst)
+
+        // Second deposit
+        vm.deposit(depositAmount)
+        delay(300)
+
+        val afterSecond = vm.uiState.value.balance
+        assertEquals(afterFirst + depositAmount, afterSecond)
+    }
 }

@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.pokect.bank.kids.data.local.PokectBankDatabase
 import com.pokect.bank.kids.data.models.MissionCategory
 import com.pokect.bank.kids.data.models.MissionStatus
+import com.pokect.bank.kids.data.models.TransactionType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -429,5 +430,138 @@ class AppRepositoryTest {
 
         // resetData should succeed (it cancels scope and calls PokectBankDatabase.resetInstance)
         assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `operations fail after resetData with isShutdown guard`() = runTest(testDispatcher) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        // Perform reset
+        val resetResult = repository.resetData(context)
+        assertTrue(resetResult.isSuccess)
+
+        // After reset, write operations should fail due to _isShutdown guard
+        val depositResult = repository.deposit(10.0)
+        assertTrue(depositResult.isFailure)
+        val depositError = depositResult.exceptionOrNull() as? IllegalStateException
+        assertNotNull(depositError)
+        assertTrue(depositError.message!!.contains("finalizado"))
+
+        // createGoal should also fail
+        val goalResult = repository.createGoal("Test", "🎯", 100.0, 30)
+        assertTrue(goalResult.isFailure)
+
+        // redeemReward should also fail
+        val redeemResult = repository.redeemReward("r1")
+        assertTrue(redeemResult.isFailure)
+
+        // allocateToGoal should also fail
+        val allocateResult = repository.allocateToGoal("g1", 10.0)
+        assertTrue(allocateResult.isFailure)
+
+        // joinWeeklyChallenge should also fail
+        val joinResult = repository.joinWeeklyChallenge("wc1")
+        assertTrue(joinResult.isFailure)
+    }
+
+    // === allocateToGoal Transaction Creation Test ===
+
+    @Test
+    fun `allocateToGoal creates a Transaction record`() = runTest(testDispatcher) {
+        val initialTransactionCount = repository.getTransactions().size
+
+        // Ensure enough balance
+        repository.deposit(100.0)
+        repository.allocateToGoal("g1", 25.0)
+
+        val transactions = repository.getTransactions()
+        assertEquals(initialTransactionCount + 2, transactions.size) // deposit + allocation
+
+        val allocationTx = transactions.find { it.type == TransactionType.GOAL }
+        assertNotNull(allocationTx)
+        assertEquals(-25.0, allocationTx.amount)
+        assertTrue(allocationTx.title.contains("Alocação"))
+    }
+
+    // === Comprehensive Seed Data Verification ===
+
+    @Test
+    fun `seed data has correct counts for all entities`() = runTest(testDispatcher) {
+        val user = repository.getUser()
+        assertEquals("Lucas", user.name)
+
+        assertEquals(4, repository.getMissions().size)
+        assertEquals(3, repository.getGoals().size)
+        assertEquals(4, repository.getRewards().size)
+        assertEquals(5, repository.getFamilyMembers().size)
+        assertEquals(5, repository.getTransactions().size)
+        assertEquals(1, repository.getWeeklyChallenges().size)
+    }
+
+    @Test
+    fun `seed goals have correct IDs and titles`() = runTest(testDispatcher) {
+        val goals = repository.getGoals()
+        assertEquals("g1", goals[0].id)
+        assertEquals("Videogame Novo", goals[0].title)
+        assertEquals("g2", goals[1].id)
+        assertEquals("Bicicleta", goals[1].title)
+        assertEquals("g3", goals[2].id)
+        assertEquals("Livro de Aventuras", goals[2].title)
+    }
+
+    @Test
+    fun `seed missions have correct IDs and statuses`() = runTest(testDispatcher) {
+        val missions = repository.getMissions()
+        assertEquals("m1", missions[0].id)
+        assertEquals(MissionStatus.AVAILABLE, missions[0].status)
+        assertEquals("m2", missions[1].id)
+        assertEquals(MissionStatus.IN_PROGRESS, missions[1].status)
+        assertEquals("m3", missions[2].id)
+        assertEquals(MissionStatus.IN_PROGRESS, missions[2].status)
+        assertEquals("m4", missions[3].id)
+        assertEquals(MissionStatus.IN_PROGRESS, missions[3].status)
+    }
+
+    @Test
+    fun `seed rewards have correct redeemed state`() = runTest(testDispatcher) {
+        val rewards = repository.getRewards()
+        // All 4 rewards start with redeemed = false
+        assertFalse(rewards.any { it.redeemed })
+    }
+
+    @Test
+    fun `seed family members include current user Lucas`() = runTest(testDispatcher) {
+        val members = repository.getFamilyMembers()
+        val lucas = members.find { it.name == "Lucas" }
+        assertNotNull(lucas)
+        assertTrue(lucas.isCurrentUser)
+        assertEquals(5, lucas.level)
+        assertEquals(4750, lucas.xp)
+    }
+
+    @Test
+    fun `seed transactions span 5 records`() = runTest(testDispatcher) {
+        val transactions = repository.getTransactions()
+        assertEquals(5, transactions.size)
+
+        // Verify different transaction types exist
+        val types = transactions.map { it.type }.distinct()
+        assertTrue(types.contains(TransactionType.DEPOSIT))
+        assertTrue(types.contains(TransactionType.MISSION))
+        assertTrue(types.contains(TransactionType.GOAL))
+        assertTrue(types.contains(TransactionType.REWARD))
+    }
+
+    @Test
+    fun `seed weekly challenge has correct initial state`() = runTest(testDispatcher) {
+        val challenges = repository.getWeeklyChallenges()
+        assertEquals(1, challenges.size)
+        val wc = challenges[0]
+        assertEquals("wc1", wc.id)
+        assertTrue(wc.title.contains("Desafio"))
+        assertEquals(200, wc.rewardXp)
+        assertEquals(40, wc.rewardCoins)
+        assertFalse(wc.hasJoined)
+        assertTrue(wc.participants.isNotEmpty())
     }
 }
