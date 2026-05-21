@@ -35,3 +35,5 @@ Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que 
 | Entity dual-key pattern | uid (autoGenerate PK) + id (UUID seed) | ✓ Good — compatível com seed data existente |
 | SharedFlow<RepositoryEvent> mantido | Eventos cross-entity com distinctUntilChanged | ✓ Good — complementa Room Flow |
 | Não extrair interface do repositório | YAGNI — só 1 implementação | ✓ Good — ViewModels inalterados |
+
+'opencode -s ses_1b58b0dd0ffedYcl2Cd2b74z2A'
