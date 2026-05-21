@@ -6,6 +6,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -16,6 +18,7 @@ import com.pokect.bank.kids.ui.screens.goals.GoalsViewModelFactory
 import com.pokect.bank.kids.ui.screens.home.HomeScreen
 import com.pokect.bank.kids.ui.screens.home.HomeViewModelFactory
 import com.pokect.bank.kids.ui.screens.login.LoginScreen
+import com.pokect.bank.kids.ui.screens.login.LoginViewModel
 import com.pokect.bank.kids.ui.screens.missions.MissionsScreen
 import com.pokect.bank.kids.ui.screens.missions.MissionsViewModelFactory
 import com.pokect.bank.kids.ui.screens.ranking.RankingScreen
@@ -40,7 +43,16 @@ fun PokectBankNavGraph(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() }
         ) {
+            val loginViewModel: LoginViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return LoginViewModel(container.loginPreferences) as T
+                    }
+                }
+            )
             LoginScreen(
+                viewModel = loginViewModel,
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }

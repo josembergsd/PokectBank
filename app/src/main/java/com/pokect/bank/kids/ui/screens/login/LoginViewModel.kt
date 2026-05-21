@@ -1,13 +1,16 @@
 package com.pokect.bank.kids.ui.screens.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pokect.bank.kids.data.preferences.LoginPreferences
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 data class LoginUiState(
     val isLoginTab: Boolean = true,
@@ -19,12 +22,34 @@ data class LoginUiState(
     val step: Int = 1,
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isCheckingLogin: Boolean = true
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val loginPrefs: LoginPreferences? = null
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    init {
+        loginPrefs?.let { prefs ->
+            viewModelScope.launch {
+                prefs.loginState.collect { prefsData ->
+                    _uiState.update { current ->
+                        current.copy(
+                            isLoggedIn = prefsData.isLoggedIn,
+                            selectedAvatar = prefsData.selectedAvatar,
+                            isCheckingLogin = false
+                        )
+                    }
+                }
+            }
+        } ?: run {
+            // No DataStore available — skip loading state
+            _uiState.update { it.copy(isCheckingLogin = false) }
+        }
+    }
 
     fun toggleTab(isLogin: Boolean) {
         _uiState.update {
@@ -106,6 +131,15 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             delay(1500)
             _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+
+            // Persist login state to DataStore
+            loginPrefs?.let { prefs ->
+                try {
+                    prefs.setLoggedIn(_uiState.value.selectedAvatar)
+                } catch (e: IOException) {
+                    Log.w("LoginViewModel", "Failed to persist login state", e)
+                }
+            }
         }
     }
 
