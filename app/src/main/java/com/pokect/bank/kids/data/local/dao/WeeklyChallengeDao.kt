@@ -20,6 +20,9 @@ interface WeeklyChallengeDao {
     @Update
     suspend fun updateChallenge(challenge: WeeklyChallenge)
 
+    @Query("SELECT * FROM weekly_challenge")
+    suspend fun getChallenges(): List<WeeklyChallenge>
+
     @Query("SELECT * FROM weekly_challenge WHERE id = :originalId LIMIT 1")
     suspend fun getChallengeByOriginalId(originalId: String): WeeklyChallenge?
 

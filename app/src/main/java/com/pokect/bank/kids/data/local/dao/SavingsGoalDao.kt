@@ -20,6 +20,9 @@ interface SavingsGoalDao {
     @Update
     suspend fun updateGoal(goal: SavingsGoal)
 
+    @Query("SELECT * FROM savings_goal")
+    suspend fun getGoals(): List<SavingsGoal>
+
     @Query("SELECT * FROM savings_goal WHERE id = :originalId LIMIT 1")
     suspend fun getGoalByOriginalId(originalId: String): SavingsGoal?
 

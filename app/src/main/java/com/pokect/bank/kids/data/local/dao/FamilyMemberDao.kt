@@ -20,6 +20,9 @@ interface FamilyMemberDao {
     @Update
     suspend fun updateFamilyMember(member: FamilyMember)
 
+    @Query("SELECT * FROM family_member")
+    suspend fun getFamilyMembers(): List<FamilyMember>
+
     @Query("SELECT * FROM family_member WHERE id = :originalId LIMIT 1")
     suspend fun getFamilyMemberByOriginalId(originalId: String): FamilyMember?
 

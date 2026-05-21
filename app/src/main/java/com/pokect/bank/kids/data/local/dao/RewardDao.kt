@@ -20,6 +20,9 @@ interface RewardDao {
     @Update
     suspend fun updateReward(reward: Reward)
 
+    @Query("SELECT * FROM reward")
+    suspend fun getRewards(): List<Reward>
+
     @Query("SELECT * FROM reward WHERE id = :originalId LIMIT 1")
     suspend fun getRewardByOriginalId(originalId: String): Reward?
 
