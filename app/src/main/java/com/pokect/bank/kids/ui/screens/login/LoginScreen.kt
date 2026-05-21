@@ -16,9 +16,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,6 +37,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,12 +62,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.res.stringResource
-import com.pokect.bank.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -74,6 +76,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pokect.bank.R
 import com.pokect.bank.kids.data.models.AvatarOption
 import com.pokect.bank.kids.ui.theme.GradientPresets
 import com.pokect.bank.kids.ui.theme.PokectBankPrimary
@@ -244,7 +247,12 @@ private fun FloatingEmojiBackground() {
             val startX = 50f + (index * 60f) % 300f
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(startX.roundToInt(), yOffsets[index].floatValue.roundToInt()) }
+                    .offset {
+                        IntOffset(
+                            startX.roundToInt(),
+                            yOffsets[index].floatValue.roundToInt()
+                        )
+                    }
                     .graphicsLayer {
                         rotationZ = rotations[index].floatValue
                         alpha = 0.35f
@@ -405,52 +413,60 @@ private fun AuthCard(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
-        Box(
+        val cardShape = RoundedCornerShape(24.dp)
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .graphicsLayer {
-                    shadowElevation = 8f
-                    shape = RoundedCornerShape(24.dp)
-                    clip = true
-                }
-                .padding(24.dp)
+                .shadow(
+                    elevation = 24.dp,
+                    shape = cardShape,
+                    clip = false,
+                    ambientColor = PokectBankPrimary.copy(alpha = 0.5f),
+                    spotColor = PokectBankPrimary.copy(alpha = 0.5f)
+                ),
+            shape = cardShape,
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 24.dp)
         ) {
-            AnimatedContent(
-                targetState = uiState.step,
-                transitionSpec = {
-                    if (targetState > initialState) {
-                        (slideInHorizontally { it / 4 } + fadeIn()) togetherWith
-                        (slideOutHorizontally { -it / 4 } + fadeOut())
+            Box(modifier = Modifier.padding(24.dp)) {
+                AnimatedContent(
+                    targetState = uiState.step,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            (slideInHorizontally { it / 4 } + fadeIn()) togetherWith
+                                    (slideOutHorizontally { -it / 4 } + fadeOut())
+                        } else {
+                            (slideInHorizontally { -it / 4 } + fadeIn()) togetherWith
+                                    (slideOutHorizontally { it / 4 } + fadeOut())
+                        }
+                    },
+                    label = "stepTransition"
+                ) { step ->
+                    if (step == 1) {
+                        Step1Credentials(
+                            uiState = uiState,
+                            onToggleTab = onToggleTab,
+                            onUpdateName = onUpdateName,
+                            onUpdateEmail = onUpdateEmail,
+                            onUpdatePassword = onUpdatePassword,
+                            onTogglePasswordVisibility = onTogglePasswordVisibility,
+                            onNextStep = onNextStep,
+                            onForgotPassword = onForgotPassword
+                        )
                     } else {
-                        (slideInHorizontally { -it / 4 } + fadeIn()) togetherWith
-                        (slideOutHorizontally { it / 4 } + fadeOut())
+                        Step2AvatarSelection(
+                            uiState = uiState,
+                            onSelectAvatar = onSelectAvatar,
+                            onPreviousStep = onPreviousStep,
+                            onLogin = onLogin
+                        )
                     }
-                },
-                label = "stepTransition"
-            ) { step ->
-                if (step == 1) {
-                    Step1Credentials(
-                        uiState = uiState,
-                        onToggleTab = onToggleTab,
-                        onUpdateName = onUpdateName,
-                        onUpdateEmail = onUpdateEmail,
-                        onUpdatePassword = onUpdatePassword,
-                        onTogglePasswordVisibility = onTogglePasswordVisibility,
-                        onNextStep = onNextStep,
-                        onForgotPassword = onForgotPassword
-                    )
-                } else {
-                    Step2AvatarSelection(
-                        uiState = uiState,
-                        onSelectAvatar = onSelectAvatar,
-                        onPreviousStep = onPreviousStep,
-                        onLogin = onLogin
-                    )
                 }
             }
         }
+
 
         // Parental note
         Spacer(modifier = Modifier.height(16.dp))
@@ -504,8 +520,10 @@ private fun Step1Credentials(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedBorderColor = PokectBankPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surface
                     )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -524,8 +542,10 @@ private fun Step1Credentials(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedBorderColor = PokectBankPrimary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.surface
             )
         )
 
@@ -557,8 +577,10 @@ private fun Step1Credentials(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedBorderColor = PokectBankPrimary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.surface
             )
         )
 
@@ -700,55 +722,53 @@ private fun TabSwitcher(
     isLogin: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(4.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Entrar tab
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (isLogin) MaterialTheme.colorScheme.surface else Color.Transparent
-                    )
-                    .clickable { onToggle(true) }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.login_tab),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (isLogin) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isLogin) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        // Entrar tab
+        Button(
+            onClick = { onToggle(true) },
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isLogin) MaterialTheme.colorScheme.surface else Color.Transparent,
+                contentColor = if (isLogin) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            elevation = null,
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.login_tab),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isLogin) FontWeight.Bold else FontWeight.Normal
+            )
+        }
 
-            // Criar Conta tab
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (!isLogin) MaterialTheme.colorScheme.surface else Color.Transparent
-                    )
-                    .clickable { onToggle(false) }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.signup_tab),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (!isLogin) FontWeight.Bold else FontWeight.Normal,
-                    color = if (!isLogin) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        // Criar Conta tab
+        Button(
+            onClick = { onToggle(false) },
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (!isLogin) MaterialTheme.colorScheme.surface else Color.Transparent,
+                contentColor = if (!isLogin) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            elevation = null,
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.signup_tab),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (!isLogin) FontWeight.Bold else FontWeight.Normal
+            )
         }
     }
 }
@@ -784,7 +804,11 @@ private fun AvatarGridItem(
                 else MaterialTheme.colorScheme.surfaceVariant
             )
             .then(
-                if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
+                if (isSelected) Modifier.border(
+                    2.dp,
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(16.dp)
+                )
                 else Modifier.border(2.dp, Color.Transparent, RoundedCornerShape(16.dp))
             )
             .clickable { onClick() },
@@ -939,7 +963,7 @@ private fun FooterSection() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp),
+            .height(60.dp),
         contentAlignment = Alignment.Center
     ) {
         // Fox
