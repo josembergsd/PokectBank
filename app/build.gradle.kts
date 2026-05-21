@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -65,6 +66,14 @@ dependencies {
 
     // Activity
     implementation(libs.activity.compose)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // DataStore
+    implementation(libs.datastore.preferences)
 
     // Testing
     testImplementation(libs.junit)
