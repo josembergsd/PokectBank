@@ -35,6 +35,7 @@ import com.pokect.bank.kids.ui.screens.home.components.MissionSummaryCard
 import com.pokect.bank.kids.ui.screens.home.components.PiggyBankCard
 import com.pokect.bank.kids.ui.theme.PokectBankBackground
 import com.pokect.bank.kids.ui.screens.home.components.HomeTopBar
+import com.pokect.bank.kids.ui.screens.home.components.TransactionHistoryCard
 
 @Composable
 fun HomeScreen(
@@ -108,6 +109,13 @@ fun HomeScreen(
                     missions = uiState.missions,
                     onMissionTap = { onNavigateToMissions() },
                     onViewAllTap = { onNavigateToMissions() },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                TransactionHistoryCard(
+                    transactions = uiState.transactions,
+                    isExpanded = uiState.isHistoryExpanded,
+                    onToggle = { viewModel.toggleHistory() },
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
