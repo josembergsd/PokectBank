@@ -9,6 +9,7 @@ import com.pokect.bank.kids.data.repository.RepositoryEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -50,7 +51,7 @@ class MissionsViewModel(
     init {
         viewModelScope.launch { loadMissions() }
         viewModelScope.launch {
-            repository.events.collect { event ->
+            repository.events.distinctUntilChanged().collect { event ->
                 if (event is RepositoryEvent.MissionsChanged) {
                     loadMissions()
                 }

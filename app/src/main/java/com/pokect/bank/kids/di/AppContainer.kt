@@ -7,6 +7,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.pokect.bank.kids.data.local.PokectBankDatabase
 import com.pokect.bank.kids.data.preferences.LoginPreferences
 import com.pokect.bank.kids.data.repository.AppRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "login_state")
 
@@ -17,22 +20,43 @@ object AppContainer {
         appContext = context.applicationContext
     }
 
-    private val database: PokectBankDatabase by lazy {
-        PokectBankDatabase.getInstance(appContext)
-    }
+    // === Database with reset support ===
+    private var _database: PokectBankDatabase? = null
+    private val database: PokectBankDatabase
+        get() {
+            if (_database == null) {
+                _database = PokectBankDatabase.getInstance(appContext)
+            }
+            return _database!!
+        }
 
-    val repository: AppRepository by lazy {
-        AppRepository(
-            userDao = database.userDao(),
-            transactionDao = database.transactionDao(),
-            savingsGoalDao = database.savingsGoalDao(),
-            missionDao = database.missionDao(),
-            rewardDao = database.rewardDao(),
-            familyMemberDao = database.familyMemberDao(),
-            weeklyChallengeDao = database.weeklyChallengeDao(),
-            database = database
-        )
-    }
+    // === Repository with reset support ===
+    private var _repository: AppRepository? = null
+    val repository: AppRepository
+        get() {
+            if (_repository == null) {
+                _repository = AppRepository(
+                    userDao = database.userDao(),
+                    transactionDao = database.transactionDao(),
+                    savingsGoalDao = database.savingsGoalDao(),
+                    missionDao = database.missionDao(),
+                    rewardDao = database.rewardDao(),
+                    familyMemberDao = database.familyMemberDao(),
+                    weeklyChallengeDao = database.weeklyChallengeDao(),
+                    database = database
+                )
+            }
+            return _repository!!
+        }
 
     val loginPreferences: LoginPreferences by lazy { LoginPreferences(appContext.dataStore) }
+
+    fun resetRepository() {
+        // Clear DataStore login state asynchronously
+        CoroutineScope(Dispatchers.IO).launch {
+            loginPreferences.clearLogin()
+        }
+        _repository = null
+        _database = null
+    }
 }

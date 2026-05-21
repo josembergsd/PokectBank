@@ -70,7 +70,13 @@ fun PokectBankNavGraph(
             )
             HomeScreen(
                 viewModel = viewModel,
-                onNavigateToMissions = { navController.navigate(Screen.Missions.route) }
+                onNavigateToMissions = { navController.navigate(Screen.Missions.route) },
+                onNavigateToLogin = {
+                    AppContainer.resetRepository()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
         composable(
