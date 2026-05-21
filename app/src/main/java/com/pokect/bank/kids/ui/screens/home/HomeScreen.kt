@@ -181,10 +181,11 @@ fun HomeScreen(
                     )
                 },
                 confirmButton = {
-                    TextButton(
+                    Button(
                         onClick = { viewModel.confirmReset(context) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
                         )
                     ) {
                         Text("Confirmar")

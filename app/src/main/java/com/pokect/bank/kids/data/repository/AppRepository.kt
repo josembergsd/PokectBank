@@ -51,6 +51,7 @@ class AppRepository(
 
     // === Repository coroutine scope ===
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _isShutdown = java.util.concurrent.atomic.AtomicBoolean(false)
 
     // === StateFlows (bridged from Room DAO Flows) ===
     private val _user = MutableStateFlow(
@@ -146,6 +147,7 @@ class AppRepository(
     // === Write operations ===
 
     suspend fun deposit(amount: Double): Result<Unit> {
+        if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
         if (amount < 1.0) return Result.failure(IllegalArgumentException("Deposit amount must be at least 1.0"))
         if (amount > 10000.0) return Result.failure(IllegalArgumentException("Deposit amount exceeds maximum"))
 
@@ -189,6 +191,7 @@ class AppRepository(
         targetAmount: Double,
         daysLeft: Int
     ): Result<Unit> {
+        if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
         return try {
             if (title.isBlank()) return Result.failure(IllegalArgumentException("Title cannot be empty"))
             if (icon.isBlank()) return Result.failure(IllegalArgumentException("Icon cannot be empty"))
@@ -216,6 +219,7 @@ class AppRepository(
     }
 
     suspend fun redeemReward(rewardId: String): Result<Unit> {
+        if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
         val reward = rewardDao.getRewards().find { it.id == rewardId }
             ?: return Result.failure(IllegalArgumentException("Reward not found: $rewardId"))
 
@@ -254,6 +258,7 @@ class AppRepository(
     }
 
     suspend fun allocateToGoal(goalId: String, amount: Double): Result<Unit> {
+        if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
         if (amount <= 0) return Result.failure(IllegalArgumentException("Amount must be greater than 0"))
 
         return try {
@@ -268,9 +273,20 @@ class AppRepository(
 
             userDao.updateUser(user.copy(balance = user.balance - amount))
             savingsGoalDao.updateGoal(goal.copy(currentAmount = goal.currentAmount + amount))
+            transactionDao.insertTransaction(
+                Transaction(
+                    id = "t_${java.util.UUID.randomUUID()}",
+                    type = TransactionType.GOAL,
+                    title = "Alocação: ${goal.title}",
+                    amount = -amount,
+                    date = java.time.LocalDate.now().toString(),
+                    icon = goal.icon
+                )
+            )
 
             broadcastEvent(RepositoryEvent.GoalsChanged)
             broadcastEvent(RepositoryEvent.UserUpdated)
+            broadcastEvent(RepositoryEvent.TransactionsChanged)
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -280,6 +296,7 @@ class AppRepository(
     }
 
     suspend fun resetData(context: Context): Result<Unit> {
+        _isShutdown.set(true)
         return try {
             repositoryScope.cancel()
             PokectBankDatabase.resetInstance(context)
@@ -292,9 +309,11 @@ class AppRepository(
     }
 
     suspend fun joinWeeklyChallenge(challengeId: String): Result<Unit> {
+        if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
         return try {
             val currentFamilyMembers = familyMemberDao.getFamilyMembers()
-            val currentUserId = currentFamilyMembers.find { it.isCurrentUser }?.id ?: "fm1"
+            val currentUserId = currentFamilyMembers.find { it.isCurrentUser }?.id
+                ?: return Result.failure(IllegalStateException("No current user found in family members"))
 
             val challenges = weeklyChallengeDao.getChallenges()
             val targetChallenge = challenges.find { it.id == challengeId }

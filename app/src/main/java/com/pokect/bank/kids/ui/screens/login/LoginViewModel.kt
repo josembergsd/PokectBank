@@ -130,16 +130,16 @@ class LoginViewModel(
 
         viewModelScope.launch {
             delay(1500)
-            _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
-
-            // Persist login state to DataStore
             loginPrefs?.let { prefs ->
                 try {
                     prefs.setLoggedIn(_uiState.value.selectedAvatar)
                 } catch (e: IOException) {
                     Log.w("LoginViewModel", "Failed to persist login state", e)
+                    _uiState.update { it.copy(isLoading = false, error = "Erro ao salvar. Tente novamente.") }
+                    return@launch
                 }
             }
+            _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
         }
     }
 

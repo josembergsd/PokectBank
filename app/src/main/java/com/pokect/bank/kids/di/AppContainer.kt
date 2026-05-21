@@ -7,8 +7,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.pokect.bank.kids.data.local.PokectBankDatabase
 import com.pokect.bank.kids.data.preferences.LoginPreferences
 import com.pokect.bank.kids.data.repository.AppRepository
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "login_state")
@@ -52,9 +54,12 @@ object AppContainer {
     val loginPreferences: LoginPreferences by lazy { LoginPreferences(appContext.dataStore) }
 
     fun resetRepository() {
-        // Clear DataStore login state asynchronously
-        CoroutineScope(Dispatchers.IO).launch {
-            loginPreferences.clearLogin()
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            try {
+                loginPreferences.clearLogin()
+            } catch (e: Exception) {
+                Log.w("AppContainer", "Failed to clear login state during reset", e)
+            }
         }
         _repository = null
         _database = null

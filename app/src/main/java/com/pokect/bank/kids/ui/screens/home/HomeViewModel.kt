@@ -29,7 +29,10 @@ class HomeViewModel(
                 when (event) {
                     is RepositoryEvent.UserUpdated -> refreshUserData()
                     is RepositoryEvent.TransactionsChanged -> refreshTransactions()
-                    else -> {}
+                    is RepositoryEvent.MissionsChanged,
+                    is RepositoryEvent.GoalsChanged,
+                    is RepositoryEvent.RewardsChanged,
+                    is RepositoryEvent.RankingChanged -> { /* Not relevant to HomeScreen */ }
                 }
             }
         }
