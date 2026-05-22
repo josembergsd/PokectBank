@@ -119,38 +119,47 @@ fun HomeScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                TransactionHistoryCard(
-                    transactions = uiState.transactions,
-                    isExpanded = uiState.isHistoryExpanded,
-                    onToggle = { viewModel.toggleHistory() },
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                if (!uiState.isHistoryExpanded) {
 
-                Button(
-                    onClick = { viewModel.toggleHistory() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFEEF2FF),
-                        contentColor = Color(0xFF6366F1)
-                    )
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = "Histórico",
-                            modifier = Modifier.padding(end = 8.dp)
+                    Button(
+                        onClick = { viewModel.toggleHistory() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEEF2FF),
+                            contentColor = Color(0xFF6366F1)
                         )
-                        Text(
-                            text = "Ver Histórico",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = "Histórico",
+                                modifier = Modifier.padding(end = 8.dp)
                             )
-                        )
+
+                            Text(
+                                text = "Ver Histórico",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                            )
+                        }
                     }
+                }
+
+                if (uiState.isHistoryExpanded) {
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TransactionHistoryCard(
+                        transactions = uiState.transactions,
+                        isExpanded = true,
+                        onToggle = { viewModel.toggleHistory() },
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

@@ -76,15 +76,16 @@ fun TransactionHistoryCard(
                 Text(
                     text = "Histórico",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = PokectBankOnSurface
                     )
                 )
                 Text(
                     text = if (isExpanded) "Ver menos" else "Ver todas",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Normal,
-                        color = PokectBankPrimary
+                        fontWeight = FontWeight.SemiBold,
+                        color = PokectBankPrimary,
+                        fontSize = 14.sp
                     ),
                     modifier = Modifier.clickable { onToggle() }
                 )
