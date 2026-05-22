@@ -1,15 +1,18 @@
 package com.pokect.bank.kids.ui.screens.home
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pokect.bank.kids.data.models.MissionStatus
 import com.pokect.bank.kids.data.repository.AppRepository
 import com.pokect.bank.kids.data.repository.RepositoryEvent
 import com.pokect.bank.kids.ui.theme.AnimationSpecs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,11 +25,14 @@ class HomeViewModel(
     init {
         viewModelScope.launch { loadInitialData() }
         viewModelScope.launch {
-            repository.events.collect { event ->
+            repository.events.distinctUntilChanged().collect { event ->
                 when (event) {
                     is RepositoryEvent.UserUpdated -> refreshUserData()
                     is RepositoryEvent.TransactionsChanged -> refreshTransactions()
-                    else -> {}
+                    is RepositoryEvent.MissionsChanged,
+                    is RepositoryEvent.GoalsChanged,
+                    is RepositoryEvent.RewardsChanged,
+                    is RepositoryEvent.RankingChanged -> { /* Not relevant to HomeScreen */ }
                 }
             }
         }
@@ -128,6 +134,43 @@ class HomeViewModel(
 
     fun toggleHistory() {
         _uiState.update { it.copy(isHistoryExpanded = !it.isHistoryExpanded) }
+    }
+
+    fun showResetConfirmation() {
+        _uiState.update { it.copy(showResetConfirmation = true) }
+    }
+
+    fun hideResetConfirmation() {
+        _uiState.update { it.copy(showResetConfirmation = false) }
+    }
+
+    fun confirmReset(context: Context) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(showResetConfirmation = false, isResetting = true) }
+            try {
+                val result = repository.resetData(context)
+                if (result.isSuccess) {
+                    _uiState.update { it.copy(isResetting = false, resetCompleted = true) }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isResetting = false,
+                            error = "Erro ao resetar dados. Tente novamente."
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                _uiState.update { it.copy(isResetting = false) }
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isResetting = false,
+                        error = "Erro ao resetar dados. Tente novamente."
+                    )
+                }
+            }
+        }
     }
 }
 

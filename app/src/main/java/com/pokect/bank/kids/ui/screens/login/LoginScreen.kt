@@ -78,8 +78,8 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pokect.bank.R
-import com.pokect.bank.kids.PokectBankApplication
 import com.pokect.bank.kids.data.models.AvatarOption
+import com.pokect.bank.kids.di.AppContainer
 import com.pokect.bank.kids.ui.theme.GradientPresets
 import com.pokect.bank.kids.ui.theme.PokectBankPrimary
 import kotlin.math.roundToInt
@@ -88,7 +88,8 @@ import kotlin.math.roundToInt
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel(
         factory = LoginViewModelFactory(
-            (LocalContext.current.applicationContext as PokectBankApplication).container.authRepository
+            AppContainer.authRepository,
+            AppContainer.loginPreferences
         )
     ),
     onLoginSuccess: () -> Unit

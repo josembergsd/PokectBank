@@ -3,6 +3,7 @@ package com.pokect.bank.kids.ui.screens.login
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pokect.bank.kids.data.preferences.LoginPreferences
 import com.pokect.bank.kids.data.repository.login.AuthRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 data class LoginUiState(
     val isLoginTab: Boolean = true,
@@ -21,14 +23,35 @@ data class LoginUiState(
     val step: Int = 1,
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isCheckingLogin: Boolean = true
 )
 
 class LoginViewModel(
-    val authRepository: AuthRepository
+    val authRepository: AuthRepository,
+    private val loginPrefs: LoginPreferences? = null
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    init {
+        loginPrefs?.let { prefs ->
+            viewModelScope.launch {
+                prefs.loginState.collect { prefsData ->
+                    _uiState.update { current ->
+                        current.copy(
+                            isLoggedIn = prefsData.isLoggedIn,
+                            selectedAvatar = prefsData.selectedAvatar,
+                            isCheckingLogin = false
+                        )
+                    }
+                }
+            }
+        } ?: run {
+            // No DataStore available — skip loading state
+            _uiState.update { it.copy(isCheckingLogin = false) }
+        }
+    }
 
     fun toggleTab(isLogin: Boolean) {
         _uiState.update {
@@ -121,6 +144,10 @@ class LoginViewModel(
                     )
                 }
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                loginPrefs?.let { prefs ->
+                    prefs.setLoggedIn(_uiState.value.selectedAvatar)
+                    return@launch
+                }
             } catch (e: Exception) {
                 Log.e("LOGIN_VM", "ERROR AUTH", e)
                 _uiState.update { it.copy(isLoading = false, error = "${e.message}") }

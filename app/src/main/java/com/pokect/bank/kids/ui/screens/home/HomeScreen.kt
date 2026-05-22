@@ -14,16 +14,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +37,7 @@ import com.pokect.bank.kids.ui.screens.home.components.DepositModal
 import com.pokect.bank.kids.ui.screens.home.components.LevelCard
 import com.pokect.bank.kids.ui.screens.home.components.MissionSummaryCard
 import com.pokect.bank.kids.ui.screens.home.components.PiggyBankCard
+import com.pokect.bank.kids.ui.screens.home.components.ResetSection
 import com.pokect.bank.kids.ui.theme.PokectBankBackground
 import com.pokect.bank.kids.ui.screens.home.components.HomeTopBar
 import com.pokect.bank.kids.ui.screens.home.components.TransactionHistoryCard
@@ -41,9 +46,11 @@ import com.pokect.bank.kids.ui.screens.home.components.TransactionHistoryCard
 fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToMissions: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     Box(
         modifier = modifier
@@ -146,7 +153,55 @@ fun HomeScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(24.dp))
+
+                ResetSection(
+                    isResetting = uiState.isResetting,
+                    onResetClick = { viewModel.showResetConfirmation() },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+
+        if (uiState.showResetConfirmation) {
+            AlertDialog(
+                onDismissRequest = { viewModel.hideResetConfirmation() },
+                title = {
+                    Text(
+                        text = "Resetar dados?",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Todos os dados serão perdidos. O app voltará ao estado inicial.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.confirmReset(context) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Text("Confirmar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.hideResetConfirmation() }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+
+        if (uiState.resetCompleted) {
+            LaunchedEffect(Unit) {
+                onNavigateToLogin()
             }
         }
 

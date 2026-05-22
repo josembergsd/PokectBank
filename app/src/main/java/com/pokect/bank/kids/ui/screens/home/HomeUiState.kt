@@ -23,7 +23,10 @@ data class HomeUiState(
     val showConfetti: Boolean = false,
     val depositSuccess: Boolean = false,
     val error: String? = null,
-    val selectedAvatar: Int = 0
+    val selectedAvatar: Int = 0,
+    val showResetConfirmation: Boolean = false,
+    val isResetting: Boolean = false,
+    val resetCompleted: Boolean = false
 ) {
     fun getGoalProgressPercent(): Float =
         if (goal <= 0.0) 0f
