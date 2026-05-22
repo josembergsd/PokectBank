@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,8 +50,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,7 +92,7 @@ fun RewardsScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 item(span = { GridItemSpan(2) }) {
-                    CoinBalanceHeader(coins = uiState.coins)
+                    CoinBalanceHeader2(coins = uiState.coins)
                 }
                 items(uiState.rewards, key = { it.reward.id }) { rewardUi ->
                     RewardCard(
@@ -163,6 +168,47 @@ private fun CoinBalanceHeader(
     }
 }
 
+
+
+@Composable
+private fun CoinBalanceHeader2(
+    coins: Int,
+    modifier: Modifier = Modifier
+) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(0.5.dp),
+        contentAlignment = Alignment.BottomStart
+    ) {
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(
+                text = "Prêmios",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.padding(bottom = 0.5.dp),
+                textAlign = TextAlign.Left
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Suas moedas: \uD83D\uDFE1 ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(coins.toString())
+                    }
+                },
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.Black.copy(alpha = 0.6f)
+                ),
+                fontSize = 14.sp,
+                textAlign = TextAlign.Left
+            )
+        }
+    }
+}
+
+
 @Composable
 private fun RewardCard(
     rewardUi: RewardUi,
@@ -183,8 +229,11 @@ private fun RewardCard(
             brush = if (canAfford && !isRedeemed) GradientPresets.gradientSuccess else Brush.linearGradient(listOf(PokectBankOutlineVariant, PokectBankOutlineVariant))
         )
     ) {
-        Box(modifier = Modifier.padding(16.dp)) {
-            Column {
+        Box(modifier = Modifier.padding(8.dp)) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            )
+            {
                 if (reward.isNew && !isRedeemed) {
                     NovoBadge(modifier = Modifier.align(Alignment.End))
                 }
@@ -195,14 +244,16 @@ private fun RewardCard(
                     isRedeemed = isRedeemed
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
+
                     text = reward.title,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = if (isRedeemed) PokectBankOnSurface.copy(alpha = 0.5f) else PokectBankOnSurface
                     ),
+                    textAlign = TextAlign.Center,
                     maxLines = 1
                 )
 
@@ -242,7 +293,7 @@ private fun RewardCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 RedeemButton(
                     canAfford = canAfford,
@@ -298,6 +349,7 @@ private fun RewardIconContainer(
             .size(80.dp)
             .graphicsLayer(alpha = alpha),
         contentAlignment = Alignment.Center
+
     ) {
         val background = if (canAfford && !isRedeemed) {
             GradientPresets.gradientWarning
@@ -368,7 +420,7 @@ private fun RedeemButton(
 
     val text = when {
         isRedeemed -> "✓ Resgatado"
-        canAfford -> "Resgatar • 🪙 $cost"
+        canAfford -> "Resgatar • \uD83D\uDFE1 $cost"
         else -> "🪙 $cost"
     }
 
@@ -388,20 +440,34 @@ private fun RedeemButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(36.dp)
             .scale(scale)
             .clip(KidShapes.medium)
             .background(backgroundBrush)
             .then(clickableModifier),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = textColor
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp) // Space between icon and text
+        ) {
+
+            Icon(
+                imageVector = Icons.Default.CardGiftcard,
+                contentDescription = "Gift Icon",
+                tint = Color.White,
+                modifier = Modifier.size(16.dp).padding(2.dp)
             )
-        )
+
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+            )
+        }
     }
 }
 
