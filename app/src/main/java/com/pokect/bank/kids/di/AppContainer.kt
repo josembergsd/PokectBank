@@ -32,7 +32,7 @@ object AppContainer {
     private val privateApiService by lazy { RetrofitClient.getPrivateService(tokenManager) }
     private val publicApiService by lazy { RetrofitClient.getPublicService() }
 
-    val homeRepository by lazy { HomeRepository(privateApiService, tokenManager) }
+    val homeRepository by lazy { HomeRepository(privateApiService) }
     val authRepository by lazy { AuthRepository(publicApiService, tokenManager) }
 
     // === Database with reset support ===

@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.pokect.bank.kids.data.models.MissionStatus
 import com.pokect.bank.kids.data.repository.AppRepository
 import com.pokect.bank.kids.data.repository.RepositoryEvent
+import com.pokect.bank.kids.data.repository.home.HomeRepository
+import com.pokect.bank.kids.data.session.TokenManager
 import com.pokect.bank.kids.ui.theme.AnimationSpecs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -15,9 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.String
 
 class HomeViewModel(
-    private val repository: AppRepository
+    private val repository: AppRepository,
+    private val homeRepository: HomeRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -39,7 +43,24 @@ class HomeViewModel(
     }
 
     private suspend fun loadInitialData() {
+        val profile = homeRepository.getProfile()
         val user = repository.getUser()
+
+        val currentUser = com.pokect.bank.kids.data.models.User(
+            id = user.id,
+            name = profile.name,
+            level = 1,
+            balance = user.balance,
+            goal = user.goal,
+            xp = 0,
+            xpToNextLevel = user.xpToNextLevel,
+            totalXp = user.totalXp,
+            streak = user.streak,
+            coins = user.coins,
+            badges = user.badges,
+            selectedAvatar = profile.avatarId
+        )
+
         val inProgressMissions = repository.getMissions()
             .filter { it.status == MissionStatus.IN_PROGRESS }
             .take(2)
@@ -49,7 +70,7 @@ class HomeViewModel(
             it.copy(
                 missions = inProgressMissions,
                 transactions = transactions
-            ).withUser(user)
+            ).withUser(currentUser)
         }
     }
 
