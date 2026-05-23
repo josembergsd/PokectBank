@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,28 +42,37 @@ fun MissionsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(PokectBankBackground)
+    ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(PokectBankBackground),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp)
         ) {
-            // Header
+
             item {
-                Text(
-                    text = stringResource(R.string.missions_screen_title),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PokectBankOnBackground
-                    ),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Missões",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PokectBankOnBackground
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Complete missões e ganhe recompensas!",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = PokectBankMutedForeground
+                        )
+                    )
+                }
             }
 
-            // Filter chips
             item {
                 MissionCategoryFilter(
                     selectedFilter = uiState.selectedFilter,
@@ -68,13 +80,12 @@ fun MissionsScreen(
                 )
             }
 
-            // Empty state or mission list
             if (uiState.filteredMissions.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 48.dp),
+                            .fillMaxWidth()
+                            .padding(vertical = 64.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -83,11 +94,11 @@ fun MissionsScreen(
                         ) {
                             Text(
                                 text = "🌟",
-                                fontSize = 48.sp
+                                fontSize = 56.sp
                             )
                             Text(
                                 text = stringResource(R.string.missions_empty_heading),
-                                style = MaterialTheme.typography.headlineMedium.copy(
+                                style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = PokectBankOnBackground
                                 ),
@@ -120,6 +131,10 @@ fun MissionsScreen(
                         )
                     )
                 }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }

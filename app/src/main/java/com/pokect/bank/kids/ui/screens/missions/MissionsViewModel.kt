@@ -13,9 +13,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// ============================================================================
-// Filter category enum — includes ALL for "Todas" filter
-// ============================================================================
 enum class MissionFilterCategory(val label: String) {
     ALL("Todas"),
     DAILY("Diárias"),
@@ -30,18 +27,12 @@ enum class MissionFilterCategory(val label: String) {
     }
 }
 
-// ============================================================================
-// UI State
-// ============================================================================
 data class MissionsUiState(
     val selectedFilter: MissionFilterCategory = MissionFilterCategory.ALL,
     val allMissions: List<Mission> = emptyList(),
     val filteredMissions: List<Mission> = emptyList()
 )
 
-// ============================================================================
-// ViewModel
-// ============================================================================
 class MissionsViewModel(
     private val repository: AppRepository
 ) : ViewModel() {
@@ -61,10 +52,16 @@ class MissionsViewModel(
 
     private suspend fun loadMissions() {
         val missions = repository.getMissions()
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            val category = state.selectedFilter.toMissionCategory()
+            val filtered = if (category == null) {
+                missions
+            } else {
+                missions.filter { it.category == category }
+            }
+            state.copy(
                 allMissions = missions,
-                filteredMissions = missions
+                filteredMissions = filtered
             )
         }
     }
