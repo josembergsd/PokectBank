@@ -62,7 +62,7 @@ fun PokectBankNavGraph(
             exitTransition = { slideOutHorizontally { -it } + fadeOut() }
         ) {
             val viewModel: com.pokect.bank.kids.ui.screens.home.HomeViewModel = viewModel(
-                factory = HomeViewModelFactory(container.repository, container.homeRepository)
+                factory = HomeViewModelFactory(container.repository, container.homeRepository, container.tokenManager)
             )
             HomeScreen(
                 viewModel = viewModel,

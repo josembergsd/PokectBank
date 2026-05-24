@@ -21,7 +21,8 @@ import kotlin.String
 
 class HomeViewModel(
     private val repository: AppRepository,
-    private val homeRepository: HomeRepository
+    private val homeRepository: HomeRepository,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -43,34 +44,46 @@ class HomeViewModel(
     }
 
     private suspend fun loadInitialData() {
-        val profile = homeRepository.getProfile()
-        val user = repository.getUser()
+        _uiState.update { it.copy(isLoading = true) }
+        try {
+            val profile = homeRepository.getProfile()
+            val user = repository.getUser()
 
-        val currentUser = com.pokect.bank.kids.data.models.User(
-            id = user.id,
-            name = profile.name,
-            level = 1,
-            balance = user.balance,
-            goal = user.goal,
-            xp = 0,
-            xpToNextLevel = user.xpToNextLevel,
-            totalXp = user.totalXp,
-            streak = user.streak,
-            coins = user.coins,
-            badges = user.badges,
-            selectedAvatar = profile.avatarId
-        )
+            val currentUser = com.pokect.bank.kids.data.models.User(
+                id = user.id,
+                name = profile.name,
+                level = user.level,
+                balance = user.balance,
+                goal = user.goal,
+                xp = user.xp,
+                xpToNextLevel = user.xpToNextLevel,
+                totalXp = user.totalXp,
+                streak = user.streak,
+                coins = user.coins,
+                badges = user.badges,
+                selectedAvatar = profile.avatarId
+            )
 
-        val inProgressMissions = repository.getMissions()
-            .filter { it.status == MissionStatus.IN_PROGRESS }
-            .take(2)
-        val transactions = repository.getTransactions()
+            val inProgressMissions = repository.getMissions()
+                .filter { it.status == MissionStatus.IN_PROGRESS }
+                .take(2)
+            val transactions = repository.getTransactions()
 
-        _uiState.update {
-            it.copy(
-                missions = inProgressMissions,
-                transactions = transactions
-            ).withUser(currentUser)
+            _uiState.update {
+                it.copy(
+                    missions = inProgressMissions,
+                    transactions = transactions,
+                    isLoading = false,
+                    error = null
+                ).withUser(currentUser)
+            }
+        } catch (e: Exception) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    error = "Erro ao carregar dados do perfil: ${e.localizedMessage}"
+                )
+            }
         }
     }
 
@@ -169,7 +182,10 @@ class HomeViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(showResetConfirmation = false, isResetting = true) }
             try {
+                com.pokect.bank.kids.di.AppContainer.loginPreferences.clearLogin()
+                tokenManager.clearToken()
                 val result = repository.resetData(context)
+                
                 if (result.isSuccess) {
                     _uiState.update { it.copy(isResetting = false, resetCompleted = true) }
                 } else {
@@ -192,6 +208,10 @@ class HomeViewModel(
                 }
             }
         }
+    }
+
+    fun logout(context: Context) {
+        confirmReset(context)
     }
 }
 

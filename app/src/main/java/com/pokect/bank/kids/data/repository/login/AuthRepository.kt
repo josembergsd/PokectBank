@@ -28,5 +28,7 @@ class AuthRepository(
                 email, password, name, avatarId
             )
         )
+
+        this.login(email, password)
     }
 }

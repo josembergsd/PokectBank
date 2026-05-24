@@ -22,7 +22,7 @@ class AuthInterceptor(
                 .addHeader("Authorization", "Bearer $token")
                 .build()
         } else {
-            throw RuntimeException("Session token not find, this route is private")
+            chain.request()
         }
 
         return chain.proceed(request)
