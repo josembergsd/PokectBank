@@ -83,7 +83,7 @@
 >
 > "Na tela de **Metas** a criança aprende a poupar com objetivos concretos. Ela pode criar uma meta de economia — por exemplo 'Comprar um Video Game' por R$ 200,00 — escolher um emoji e uma cor pra representar a meta.
 >
-> Conforme a criança deposita moedas no cofrinho, ela pode alocar valores pras metas. A barra de progresso mostra visualmente quanto já foi guardado e quanto falta. Quando a meta é atingida, ela fica marcada como concluída e o botão fica desabilitado em duas opções, quando não há valores no cofrinho e quando a meta for atingida, não permitindo alocar valores acima do estipulado para a meta. O app já vem com 4 metas de exemplo: Video Game, Guitarra, Livros e Material de Arte."
+> Conforme a criança deposita moedas no cofrinho, ela pode alocar valores pras metas. A barra de progresso mostra visualmente quanto já foi guardado e quanto falta. Quando a meta é atingida, ela fica marcada como concluída e o botão fica desabilitado em duas opções, quando não há valores no cofrinho e quando a meta for atingida, não permitindo alocar valores acima do estipulado para a meta. O app já vem com 4 metas de exemplo: Video Game, Guitarra, Livros e Material de Arte, que são ordenado da meta com menor porcentagem atingida para a maior."
 
 #### 3.5 Prêmios (4:55–5:40) — Thiago
 
