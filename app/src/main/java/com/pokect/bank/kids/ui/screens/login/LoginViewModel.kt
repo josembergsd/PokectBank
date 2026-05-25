@@ -4,6 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pokect.bank.kids.data.preferences.LoginPreferences
+import com.pokect.bank.kids.data.repository.login.AuthRepository
+import com.google.gson.Gson
+import com.pokect.bank.kids.data.network.ApiErrorResponse
+import retrofit2.HttpException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +31,7 @@ data class LoginUiState(
 )
 
 class LoginViewModel(
+    val authRepository: AuthRepository,
     private val loginPrefs: LoginPreferences? = null
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -126,20 +131,35 @@ class LoginViewModel(
             return
         }
 
-        _uiState.update { it.copy(isLoading = true, error = null) }
-
         viewModelScope.launch {
-            delay(1500)
-            loginPrefs?.let { prefs ->
-                try {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            val state = _uiState.value
+            try {
+                if (state.isLoginTab) {
+                    authRepository.login(state.email, state.password)
+                } else {
+                    authRepository.register(
+                        email = state.email,
+                        password = state.password,
+                        name = state.name,
+                        avatarId = state.selectedAvatar
+                    )
+                }
+                loginPrefs?.let { prefs ->
                     prefs.setLoggedIn(_uiState.value.selectedAvatar)
-                } catch (e: IOException) {
-                    Log.w("LoginViewModel", "Failed to persist login state", e)
-                    _uiState.update { it.copy(isLoading = false, error = "Erro ao salvar. Tente novamente.") }
                     return@launch
                 }
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+            } catch (e: Exception) {
+                val errorMessage = (e as? HttpException)?.response()?.errorBody()?.string()?.let {
+                    try { 
+                        Gson().fromJson(it, ApiErrorResponse::class.java).let { res -> res.message ?: res.error }
+                    } catch(_: Exception) { null }
+                } ?: e.message ?: "Erro inesperado"
+                
+                _uiState.update { it.copy(isLoading = false, error = errorMessage) }
             }
-            _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
         }
     }
 

@@ -1,6 +1,7 @@
 package com.pokect.bank.kids
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -25,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,7 +39,9 @@ import com.pokect.bank.kids.di.AppContainer
 import com.pokect.bank.kids.ui.navigation.PokectBankNavGraph
 import com.pokect.bank.kids.ui.navigation.Screen
 import com.pokect.bank.kids.ui.navigation.bottomNavTabs
+import com.pokect.bank.kids.ui.screens.login.LoginScreen
 import com.pokect.bank.kids.ui.screens.login.LoginViewModel
+import com.pokect.bank.kids.ui.screens.login.LoginViewModelFactory
 import com.pokect.bank.kids.ui.theme.PokectBankTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,17 +55,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             PokectBankTheme {
                 val loginViewModel: LoginViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return LoginViewModel(AppContainer.loginPreferences) as T
-                        }
-                    }
+                    factory = LoginViewModelFactory(
+                        AppContainer.authRepository,
+                        AppContainer.loginPreferences
+                    )
                 )
                 val authState by loginViewModel.uiState.collectAsStateWithLifecycle()
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+                val token by AppContainer.tokenManager.token.collectAsStateWithLifecycle(initialValue = null)
 
                 // Three-state auth gate: checking → logged out → logged in
                 if (authState.isCheckingLogin) {
@@ -77,7 +81,7 @@ class MainActivity : ComponentActivity() {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Verificando...",
+                                text = "Loading...",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -125,9 +129,11 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { innerPadding ->
+                        Log.w("MAIN_ACTIVITY", "token ${token} isLoggedIn ${authState.isLoggedIn}")
+
                         PokectBankNavGraph(
                             navController = navController,
-                            isLoggedIn = authState.isLoggedIn,
+                            isLoggedIn = authState.isLoggedIn && !token.isNullOrBlank(),
                             container = AppContainer,
                             modifier = Modifier.padding(innerPadding)
                         )
@@ -136,4 +142,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PreviewLogin() {
+    LoginScreen(
+        onLoginSuccess = { }
+    )
 }

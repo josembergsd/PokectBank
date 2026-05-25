@@ -2,7 +2,6 @@ package com.pokect.bank.kids.ui.screens.home.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
@@ -32,6 +32,7 @@ import com.pokect.bank.kids.ui.theme.PokectBankOnBackground
 fun HomeTopBar(
     userName: String,
     level: Int,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -61,45 +62,19 @@ fun HomeTopBar(
             }
         }
 
-        Row {
-            IconButton(
-                onClick = { },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE8EAF6))
-            ) {
-                Box {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = "Notificações",
-                        tint = Color(0xFF1A1A2E),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color.Red)
-                            .align(Alignment.TopEnd)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            IconButton(
-                onClick = { },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE8EAF6))
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Settings,
-                    contentDescription = "Configurações",
-                    tint = Color(0xFF1A1A2E),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+        IconButton(
+            onClick = onLogout,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFEBEE))
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                contentDescription = "Sair",
+                tint = Color.Red,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

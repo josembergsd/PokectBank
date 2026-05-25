@@ -72,6 +72,7 @@ fun HomeScreen(
                 HomeTopBar(
                     userName = uiState.userName,
                     level = uiState.level,
+                    onLogout = { viewModel.showResetConfirmation() },
                     modifier = Modifier
                 )
             }

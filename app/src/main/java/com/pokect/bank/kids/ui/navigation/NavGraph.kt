@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -19,6 +20,7 @@ import com.pokect.bank.kids.ui.screens.home.HomeScreen
 import com.pokect.bank.kids.ui.screens.home.HomeViewModelFactory
 import com.pokect.bank.kids.ui.screens.login.LoginScreen
 import com.pokect.bank.kids.ui.screens.login.LoginViewModel
+import com.pokect.bank.kids.ui.screens.login.LoginViewModelFactory
 import com.pokect.bank.kids.ui.screens.missions.MissionsScreen
 import com.pokect.bank.kids.ui.screens.missions.MissionsViewModelFactory
 import com.pokect.bank.kids.ui.screens.ranking.RankingScreen
@@ -43,13 +45,9 @@ fun PokectBankNavGraph(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() }
         ) {
+            val factory = remember { LoginViewModelFactory(container.authRepository, container.loginPreferences) }
             val loginViewModel: LoginViewModel = viewModel(
-                factory = object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return LoginViewModel(container.loginPreferences) as T
-                    }
-                }
+                factory = factory
             )
             LoginScreen(
                 viewModel = loginViewModel,
@@ -65,14 +63,16 @@ fun PokectBankNavGraph(
             enterTransition = { slideInHorizontally { it } + fadeIn() },
             exitTransition = { slideOutHorizontally { -it } + fadeOut() }
         ) {
+            val factory = remember {
+                HomeViewModelFactory(container.repository, container.homeRepository, container.tokenManager)
+            }
             val viewModel: com.pokect.bank.kids.ui.screens.home.HomeViewModel = viewModel(
-                factory = HomeViewModelFactory(container.repository)
+                factory = factory
             )
             HomeScreen(
                 viewModel = viewModel,
                 onNavigateToMissions = { navController.navigate(Screen.Missions.route) },
                 onNavigateToLogin = {
-                    AppContainer.resetRepository()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -84,8 +84,9 @@ fun PokectBankNavGraph(
             enterTransition = { slideInHorizontally { it } + fadeIn() },
             exitTransition = { slideOutHorizontally { -it } + fadeOut() }
         ) {
+            val factory = remember { GoalsViewModelFactory(container.repository) }
             val viewModel: com.pokect.bank.kids.ui.screens.goals.GoalsViewModel = viewModel(
-                factory = GoalsViewModelFactory(container.repository)
+                factory = factory
             )
             GoalsScreen(viewModel = viewModel)
         }
@@ -94,8 +95,9 @@ fun PokectBankNavGraph(
             enterTransition = { slideInHorizontally { it } + fadeIn() },
             exitTransition = { slideOutHorizontally { -it } + fadeOut() }
         ) {
+            val factory = remember { MissionsViewModelFactory(container.repository) }
             val viewModel: com.pokect.bank.kids.ui.screens.missions.MissionsViewModel = viewModel(
-                factory = MissionsViewModelFactory(container.repository)
+                factory = factory
             )
             MissionsScreen(viewModel = viewModel)
         }
@@ -104,8 +106,9 @@ fun PokectBankNavGraph(
             enterTransition = { slideInHorizontally { it } + fadeIn() },
             exitTransition = { slideOutHorizontally { -it } + fadeOut() }
         ) {
+            val factory = remember { RewardsViewModelFactory(container.repository) }
             val viewModel: com.pokect.bank.kids.ui.screens.rewards.RewardsViewModel = viewModel(
-                factory = RewardsViewModelFactory(container.repository)
+                factory = factory
             )
             RewardsScreen(viewModel = viewModel)
         }
@@ -114,8 +117,9 @@ fun PokectBankNavGraph(
             enterTransition = { slideInHorizontally { it } + fadeIn() },
             exitTransition = { slideOutHorizontally { -it } + fadeOut() }
         ) {
+            val factory = remember { RankingViewModelFactory(container.repository) }
             val viewModel: com.pokect.bank.kids.ui.screens.ranking.RankingViewModel = viewModel(
-                factory = RankingViewModelFactory(container.repository)
+                factory = factory
             )
             RankingScreen(viewModel = viewModel)
         }
