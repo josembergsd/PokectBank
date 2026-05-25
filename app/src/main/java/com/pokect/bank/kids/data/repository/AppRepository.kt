@@ -146,6 +146,24 @@ class AppRepository(
 
     // === Write operations ===
 
+    suspend fun updateUser(user: User): Result<Unit> {
+        if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
+        return try {
+            userDao.updateUser(user)
+            familyMemberDao.syncCurrentUser(
+                xp = user.totalXp,
+                coins = user.coins,
+                level = user.level
+            )
+            broadcastEvent(RepositoryEvent.UserUpdated)
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun deposit(amount: Double): Result<Unit> {
         if (_isShutdown.get()) return Result.failure(IllegalStateException("Repositório finalizado"))
         if (amount < 1.0) return Result.failure(IllegalArgumentException("Deposit amount must be at least 1.0"))
