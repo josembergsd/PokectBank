@@ -100,6 +100,14 @@ O app inclui dados de demonstração populados automaticamente no primeiro acess
 - **5 membros** da família no ranking (`Lucas`, `Ana`, `Pedro`, `Sofia`, `Miguel`)
 - **1 desafio semanal** com recompensa em XP e moedas
 
+## Integrantes
+
+Os integrantes do grupo são:
+- Clebson Pires Lira | [GitHub](https://github.com/Clebson-Lira)
+- Edimar Barbosa Miranda Junior | [GitHub](https://github.com/edimarbmjunior)
+- Gustavo de Oliveira Bossolani | [GitHub](https://github.com/gustavo-bossolani)
+- Thiago de Morais Severo | [GitHub](https://github.com/josembergsd)
+
 ## Licença
 
 Projeto de estudo pessoal — sem licença definida.
