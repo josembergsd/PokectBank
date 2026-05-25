@@ -3,9 +3,9 @@
 
 **PokectBank**
 
-Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que simula educação financeira para crianças, com cofrinho, metas de economia, missões, recompensas e ranking familiar. Atualmente os dados são 100% em memória e se perdem ao reiniciar.
+Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que simula educação financeira para crianças, com cofrinho, metas de economia, missões, recompensas, ranking familiar e autenticação via API REST. Os dados persistem via Room (SQLite) + DataStore Preferences entre sessões.
 
-**Core Value:** Criança consegue simular depósitos, metas e recompensas com os dados persistindo entre sessões.
+**Core Value:** Criança consegue simular depósitos, metas e recompensas com os dados persistindo entre sessões, com sincronização opcional via API REST.
 
 ### Constraints
 
@@ -42,9 +42,16 @@ Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que 
   - 7 DAOs with Flow-based reactive observation
   - Database: `pokectbank.db` (version 1, `fallbackToDestructiveMigration()`)
   - Seed data via `SeedDatabaseCallback` with SQL INSERT on create
-- DataStore Preferences 1.2.1 — Key-value storage for login state (`login_state`)
-  - Properties: `is_logged_in` (boolean), `selected_avatar` (int)
-  - Wrapper: `data/preferences/LoginPreferences.kt`
+- DataStore Preferences 1.2.1 — Key-value storage for login state (`login_state`) and JWT token (`auth_store`)
+  - Properties (login_state): `is_logged_in` (boolean), `selected_avatar` (int)
+  - Properties (auth_store): `jwt_token` (string)
+  - Wrappers: `data/preferences/LoginPreferences.kt` + `data/session/TokenManager.kt`
+
+**Networking:**
+- Retrofit 2.11.0 — HTTP client for REST API calls to `http://10.0.2.2:8080/`
+- OkHttp 4.12.0 — HTTP engine with `logging-interceptor` at BODY level
+- Gson Converter — JSON serialization/deserialization
+- AuthInterceptor — injects `Authorization: Bearer <jwt>` via OkHttp interceptor
 
 **Code Generation:**
 - KSP 2.1.0-1.0.29 — Kotlin Symbol Processing for Room annotation processing
@@ -87,12 +94,15 @@ Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que 
 - `gradle.properties`: JVM args (2048m), Kotlin official style, AndroidX enabled
 - `app/proguard-rules.pro`: Keeps `@Composable` methods (minification disabled in release)
 - Room config: `PokectBankDatabase.kt` (version 1, `exportSchema = false`)
-- DataStore config: `LoginPreferences.kt` (store name `login_state`)
+- DataStore config: `LoginPreferences.kt` (store name `login_state`) + `TokenManager.kt` (store name `auth_store`)
 
 ### Platform Requirements
 - Android 8.0+ (API 26+) device
 - Portrait orientation only (`screenOrientation="portrait"`)
-- No network permission required (fully offline, local SQLite + DataStore)
+- Internet permission required (`android.permission.INTERNET`) — for REST API calls to local backend
+- Network security config at `res/xml/network_security_config.xml` — cleartext HTTP allowed for `10.0.2.2` and `localhost`
+- `allowBackup=true` — Room DB + DataStore backed up to Google Drive (should be disabled for production)
+- No ProGuard/R8 obfuscation (`isMinifyEnabled = false` in release builds)
 - JDK 17+ for development
 - Android SDK Platform 36
 - Gradle 9.3.1 (auto-downloaded via wrapper)
@@ -116,9 +126,11 @@ Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que 
 - No Hungarian notation or type prefixes
 - PascalCase for all types. Examples: `HomeUiState`, `MissionsUiState`, `RankingUiState`, `MissionStatus`, `MissionCategory`
 - UI state classes use `*UiState` suffix convention (e.g., `HomeUiState`, `GoalsUiState`, `RewardsUiState`)
+- UI state classes use `*UiState` suffix convention (e.g., `HomeUiState`, `GoalsUiState`, `RewardsUiState`)
 - Repository event sealed interface: members use past-tense object names (`UserUpdated`, `GoalsChanged`)
 - PascalCase for singleton objects and companion objects. Examples: `AppContainer`, `AnimationSpecs`, `GradientPresets`, `KidShapes`
 - Companion objects hold static lists: `AvatarOption.options`, `Screen` sealed class with object members
+- Network DTOs: PascalCase with Dto/Request/Response suffix in `NetworkModels.kt`
 ## Code Style
 - Kotlin official code style (`kotlin.code.style=official` in `gradle.properties`)
 - Column width: no explicit limit configured
@@ -183,11 +195,12 @@ Um app Android de banco infantil (estudo pessoal) em Kotlin/Jetpack Compose que 
 ## ViewModel Factory Pattern
 
 Each ViewModel has a dedicated `*ViewModelFactory` class implementing `ViewModelProvider.Factory`:
-- `HomeViewModelFactory.kt` at `ui/screens/home/HomeViewModelFactory.kt`
+- `HomeViewModelFactory.kt` at `ui/screens/home/HomeViewModelFactory.kt` — takes `AppRepository`, `HomeRepository`, `TokenManager`
 - `GoalsViewModelFactory.kt` at `ui/screens/goals/GoalsViewModelFactory.kt`
 - `MissionsViewModelFactory.kt` at `ui/screens/missions/MissionsViewModelFactory.kt`
 - `RewardsViewModelFactory.kt` at `ui/screens/rewards/RewardsViewModelFactory.kt`
 - `RankingViewModelFactory.kt` at `ui/screens/ranking/RankingViewModelFactory.kt`
+- `LoginViewModelFactory.kt` at `ui/screens/login/LoginViewModelFactory.kt` — takes `AuthRepository`, `LoginPreferences`
 
 Factory pattern (`HomeViewModelFactory.kt`):
 ```
@@ -215,6 +228,8 @@ Exception: `LoginViewModel` is created inline in `NavGraph.kt` and `MainActivity
 - Repository uses lazy initialization with reset support (private nullable `_repository` with getter that rebuilds if null)
 - `loginPreferences` uses `by lazy` delegation
 - `resetRepository()` nulls out both `_database` and `_repository`, triggers cleanup coroutine for DataStore
+- `tokenManager`, `homeRepository`, `authRepository` also use `by lazy` delegation
+- `@Volatile` flag `_isResetting` prevents concurrent resets
 - **⚠️ Risk:** Getters on `_database`/`_repository` are NOT thread-safe (`!!` force-unwrap, no `@Volatile`, no `synchronized`). Two threads could create duplicate instances. See CONCERNS section.
 
 ## Room DAO Pattern
@@ -272,6 +287,7 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 - Custom shapes from `KidShapes` object
 - Animations use `rememberInfiniteTransition` with `animateFloat` and `infiniteRepeatable`
 - Progress bars use `ShinyProgressBar` with horizontal shine effect via `graphicsLayer`
+- Modals rendered conditionally outside main layout via `if (uiState.showModal)` pattern
 
 ## Concurrency Patterns
 
@@ -285,8 +301,6 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:.planning/codebase/ARCHITECTURE.md -->
-## Architecture
-
 ## System Overview
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -296,8 +310,8 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 │  +HomeVM    │+GoalsVM   │+MissionsVM│+RewardsVM│+RankingVM │ +LoginVM        │
 └──────┬──────┴─────┬─────┴─────┬─────┴────┬─────┴─────┬─────┴────────┬────────┘
        │            │           │          │           │              │
-       │   via ViewModelProvider.Factory   │           │    via LoginPreferences
-       │                                   │           │    (DataStore)
+       │   via ViewModelProvider.Factory   │           │    via LoginViewModelFactory
+       │                                   │           │    (AuthRepository + LoginPreferences)
        ▼            ▼           ▼          ▼           ▼              ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          Data Layer                                          │
@@ -308,17 +322,23 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 │  │  StateFlow<FamilyM.> StateFlow<List<Transaction>>                 │       │
 │  │  StateFlow<Challenge>   LoginPreferences → Flow<LoginPrefsData>   │       │
 │  └───────────────────────────────────────────────────────────────────┘       │
+│                                                                               │
+│  ┌────────────────────┐  ┌────────────────────┐                             │
+│  │ HomeRepository     │  │ AuthRepository     │                             │
+│  │ (API: GET /user/me)│  │ (API: login/reg.)  │                             │
+│  └────────────────────┘  └────────────────────┘                             │
 │       │                                                                      │
 │       ▼                                                                      │
-│  Room DAOs (7 interfaces) + DataStore Preferences                            │
+│  Room DAOs (7 interfaces) + DataStore Preferences (2 stores)                 │
 │  UserDao | TransactionDao | SavingsGoalDao | MissionDao                      │
 │  RewardDao | FamilyMemberDao | WeeklyChallengeDao                            │
+│  LoginPreferences (login_state) | TokenManager (auth_store)                  │
 └──────────────────────────────────────────────────────────────────────────────┘
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  SQLite Database (Room) + DataStore file                                     │
-│  pokectbank.db (7 tables) + login_state.preferences_pb                       │
+│  SQLite (Room) + DataStore files + Retrofit (OkHttp) to 10.0.2.2:8080       │
+│  pokectbank.db (7 tables) + login_state.preferences_pb + auth_store.preferences_pb│
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -334,9 +354,15 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 | PokectBankDatabase | Room database — 7 entities, 7 DAOs, seed data callback, in-memory test instance | `app/src/main/java/com/pokect/bank/kids/data/local/PokectBankDatabase.kt` |
 | PokectBankConverters | Room TypeConverters — enums, List<String>, Instant ↔ Long | `app/src/main/java/com/pokect/bank/kids/data/local/PokectBankConverters.kt` |
 | LoginPreferences | DataStore wrapper — persists login state (isLoggedIn, selectedAvatar) | `app/src/main/java/com/pokect/bank/kids/data/preferences/LoginPreferences.kt` |
-| HomeViewModel | Home screen state: balance, level, missions, transactions, deposit flow | `app/src/main/java/com/pokect/bank/kids/ui/screens/home/HomeViewModel.kt` |
+| TokenManager | DataStore wrapper — persists JWT token (jwt_token) in `auth_store` | `app/src/main/java/com/pokect/bank/kids/data/session/TokenManager.kt` |
+| RetrofitClient | OkHttp + Retrofit singleton — base URL `http://10.0.2.2:8080/`, Gson converter, logging interceptor | `app/src/main/java/com/pokect/bank/kids/data/network/RetrofitClient.kt` |
+| ApiService | Retrofit interface — `POST /auth/login`, `POST /auth/register`, `GET /user/me` | `app/src/main/java/com/pokect/bank/kids/data/network/ApiService.kt` |
+| AuthInterceptor | OkHttp interceptor — injects `Authorization: Bearer <jwt>` | `app/src/main/java/com/pokect/bank/kids/data/network/AuthInterceptor.kt` |
+| HomeRepository | Network layer — fetches user profile from API (authenticated) | `app/src/main/java/com/pokect/bank/kids/data/repository/home/HomeRepository.kt` |
+| AuthRepository | Network layer — login + register via API, saves JWT via TokenManager | `app/src/main/java/com/pokect/bank/kids/data/repository/login/AuthRepository.kt` |
+| HomeViewModel | Home screen state: balance, level, missions, transactions, deposit flow, API profile sync, reset/logout | `app/src/main/java/com/pokect/bank/kids/ui/screens/home/HomeViewModel.kt` |
 | GoalsViewModel | Goals CRUD, allocate funds, add-goal modal flow | `app/src/main/java/com/pokect/bank/kids/ui/screens/goals/GoalsViewModel.kt` |
-| MissionsViewModel | Mission list with category filter | `app/src/main/java/com/pokect/bank/kids/ui/screens/missions/MissionsViewModel.kt` |
+| MissionsViewModel | Mission list with category filter (ALL, DAILY, WEEKLY, SPECIAL) | `app/src/main/java/com/pokect/bank/kids/ui/screens/missions/MissionsViewModel.kt` |
 | RewardsViewModel | Reward shop, redeem flow, redemption confirmation modal | `app/src/main/java/com/pokect/bank/kids/ui/screens/rewards/RewardsViewModel.kt` |
 | RankingViewModel | Family leaderboard sorted by XP, weekly challenge join | `app/src/main/java/com/pokect/bank/kids/ui/screens/ranking/RankingViewModel.kt` |
 | LoginViewModel | Auth flow (login/signup tabs, 2-step wizard with avatar selection) | `app/src/main/java/com/pokect/bank/kids/ui/screens/login/LoginViewModel.kt` |
@@ -367,6 +393,13 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 - Contains: Models (`data/models/`), Repository (`data/repository/AppRepository.kt`), Events (`data/repository/RepositoryEvent.kt`), Room DAOs (`data/local/dao/`), Database + Converters (`data/local/`), DataStore (`data/preferences/LoginPreferences.kt`)
 - Depends on: Kotlin stdlib, kotlinx.coroutines, Room, DataStore
 - Used by: ViewModels (direct injection via factories)
+
+**Network Layer:**
+- Purpose: Remote API integration — authentication and profile sync
+- Location: `app/src/main/java/com/pokect/bank/kids/data/network/` + `data/session/` + `data/repository/home/` + `data/repository/login/`
+- Contains: `RetrofitClient.kt`, `ApiService.kt` (3 endpoints), `NetworkModels.kt` (DTOs), `AuthInterceptor.kt`, `TokenManager.kt` (jwt DataStore), `HomeRepository.kt`, `AuthRepository.kt`
+- Depends on: Retrofit, OkHttp, Gson, DataStore
+- Used by: HomeViewModel (profile sync), LoginViewModel (auth)
 
 **DI Layer:**
 - Purpose: Provide singleton repository instance to ViewModels
@@ -596,6 +629,8 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 - No `LoginViewModel` tests
 - No concurrent operation tests (race condition verification)
 - `RewardsViewModel`, `MissionsViewModel`, `RankingViewModel` tests are minimal
+- Network classes (`AuthRepository`, `HomeRepository`, `RetrofitClient`, `TokenManager`, `AuthInterceptor`, `ApiService`) have zero tests
+- `AppContainer.performFullReset()` — no coroutine-based end-to-end test
 <!-- GSD:testing-end -->
 
 <!-- GSD:concerns-start source:.planning/codebase/CONCERNS.md -->
@@ -608,26 +643,32 @@ fun PiggyBankCard(balance: Double, goal: Double, goalProgressPercent: Float, onD
 
 ### Known Bugs
 - **`confirmRedemption` overwrites fresh coins:** After redemption, `refreshCoins()` updates state, but a subsequent `_uiState.update {}` captures a stale snapshot, briefly showing pre-redemption coin count. (`RewardsViewModel.kt:132-140`)
-- **No error display on 4 screens:** Goals, Missions, Rewards, and Ranking screens set `UiState.error` but have no `SnackbarHost` or error banner — failures are invisible to the user.
+- **No error display on 5 screens:** Goals, Missions, Rewards, Ranking, and Home screens set `UiState.error` but have no `SnackbarHost` or error banner — failures are invisible to the user.
 - **StateFlow bridge errors silently swallowed:** Room DAO Flow errors are caught and logged at WARN but not propagated to UI. ViewModels show stale frozen data. (`AppRepository.kt:103-135`)
+- **Password login returns early:** `LoginViewModel.login()` calls `prefs.setLoggedIn()` then `return@launch` without updating `_uiState.isLoggedIn`, relying on fragile DataStore propagation timing. (`LoginViewModel.kt:149-152`)
+- **`forgotPassword()` uses fake success message:** Sets `"Link enviado para o email!"` without making any API call. (`LoginViewModel.kt:166-172`)
 
 ### Security
 - **`allowBackup=true`:** Room DB + DataStore backed up to Google Drive. Set to `false` for children's banking app.
 - **No ProGuard/R8 obfuscation:** `isMinifyEnabled = false` in release builds.
 - **Plaintext password in StateFlow:** `LoginUiState.password` held as `String` in memory throughout login flow. (`LoginViewModel.kt:19`)
+- **Cleartext HTTP + BODY-level logging:** API uses `http://10.0.2.2:8080/` with `HttpLoggingInterceptor.Level.BODY`, which logs full request/response including passwords. (`RetrofitClient.kt`, `network_security_config.xml`)
 
 ### Fragile Areas
 - **StateFlow Bridge (7 collectors):** If any Room Flow stops emitting (DB corruption), StateFlow silently freezes with no retry or error propagation.
 - **Database reset flow (4-class chain):** `HomeViewModel` → `AppRepository` → `AppContainer` → `PokectBankDatabase`. If any step fails silently, corrupted state may persist.
 - **No database migrations:** `fallbackToDestructiveMigration()` + `exportSchema = false`. Any schema change wipes all user data.
+- **`AuthInterceptor` uses `runBlocking`:** Reads JWT token from DataStore via `runBlocking` on OkHttp thread, risking thread starvation. (`AuthInterceptor.kt:15`)
+- **LoginScreen animation loops:** 9 parallel `while(true)` coroutine loops with manual step-based animations (25-67ms intervals), causing continuous CPU/GPU work. (`LoginScreen.kt:220-399`)
 
 ### Tech Debt
-- God Repository: 359 lines handling all 7 entities
+- God Repository: 384 lines handling all 7 entities
 - UiState classes inside ViewModels (5 of 6)
 - No repository interface → tight coupling
 - Comma-based `List<String>` converter (breaks if IDs contain commas)
 - No `LoginViewModel` tests
 - No concurrent operation tests
+- Network classes (`AuthRepository`, `HomeRepository`, `RetrofitClient`, `TokenManager`, `AuthInterceptor`, `ApiService`) have zero tests
 <!-- GSD:concerns-end -->
 
 <!-- GSD:skills-start source:skills/ -->
