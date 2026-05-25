@@ -106,7 +106,8 @@ Os integrantes do grupo são:
 - Clebson Pires Lira | [GitHub](https://github.com/Clebson-Lira)
 - Edimar Barbosa Miranda Junior | [GitHub](https://github.com/edimarbmjunior)
 - Gustavo de Oliveira Bossolani | [GitHub](https://github.com/gustavo-bossolani)
-- Thiago de Morais Severo | [GitHub](https://github.com/josembergsd)
+- Josemberg Sousa Duarte | [Github](https://github.com/josembergsd)
+- Thiago de Morais Severo | [GitHub](https://github.com/ThiagoEncode)
 
 ## Licença
 
