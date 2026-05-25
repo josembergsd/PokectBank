@@ -93,7 +93,7 @@ app/src/main/java/com/pokect/bank/kids/
 ## Dados de exemplo
 
 O app inclui dados de demonstração populados automaticamente no primeiro acesso:
-- Usuário **Lucas** com R$ 47,50 de saldo e nível 3
+- Usuário **Lucas** com R$ 47,50 de saldo e nível 5
 - **4 metas** de economia (`🎮 Video Game`, `🎸 Guitarra`, `📚 Livros`, `🎨 Material de Arte`)
 - **5 missões** com diferentes categorias e dificuldades
 - **6 recompensas** para resgatar com moedas
