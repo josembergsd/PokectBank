@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -46,6 +45,7 @@ import com.pokect.bank.kids.ui.theme.PokectBankOutline
 import com.pokect.bank.kids.ui.theme.PokectBankPrimary
 import com.pokect.bank.kids.ui.theme.PokectBankSurface
 import com.pokect.bank.kids.ui.theme.PokectBankSuccess
+import kotlin.math.min
 
 @Composable
 fun GoalsScreen(
@@ -145,77 +145,54 @@ fun GoalsScreen(
                 }
             } else {
                 // Goal cards
-                items(uiState.goals, key = { it.id }) { goal ->
+                itemsIndexed(uiState.goals, key = { _, goal -> goal.id }) { index, goal ->
                     Column {
                         GoalCard(
                             goal = goal,
                             modifier = Modifier.animateItem()
                         )
-                        // Allocate balance button — shows when user has balance > 0
-                        if (uiState.user?.balance ?: 0.0 > 0.0) {
-                            Button(
-                                onClick = {
-                                    val balance = uiState.user?.balance ?: 0.0
-                                    viewModel.allocateToGoal(goal.id, balance)
+                        val balance = uiState.user?.balance ?: 0.0
+                        val remainingAmount = (goal.targetAmount - goal.currentAmount).coerceAtLeast(0.0)
+                        val amountToAllocate = min(balance, remainingAmount)
+                        val isGoalCompleted = remainingAmount <= 0.0
+                        val canAllocate = amountToAllocate > 0.0 && !isGoalCompleted
+
+                        Button(
+                            onClick = {
+                                viewModel.allocateToGoal(goal.id, amountToAllocate)
+                            },
+                            enabled = canAllocate,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PokectBankSuccess
+                            ),
+                            shape = KidShapes.medium
+                        ) {
+                            Text(
+                                text = when {
+                                    isGoalCompleted -> "Meta concluída"
+                                    balance <= 0.0 -> "Sem saldo no cofrinho"
+                                    else -> "Resgatar para esta meta"
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = PokectBankSuccess
-                                ),
-                                shape = KidShapes.medium
-                            ) {
-                                Text(
-                                    text = "Resgatar para esta meta",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        // Show add-goal card after each 3 goals.
+                        if ((index + 1) % 3 == 0) {
+                            AddGoalCard(onClick = { viewModel.showAddGoalModal() })
                         }
                     }
                 }
             }
 
-            // "Add new goal" card — always shown as last item
-            item {
-                Card(
-                    shape = KidShapes.large,
-                    colors = CardDefaults.cardColors(containerColor = PokectBankSurface),
-                    modifier = Modifier
-                        .drawBehind {
-                            drawRoundRect(
-                                color = PokectBankOutline,
-                                size = size,
-                                cornerRadius = CornerRadius(24f, 24f),
-                                style = Stroke(
-                                    width = 2.dp.toPx(),
-                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))
-                                )
-                            )
-                        }
-                        .clip(KidShapes.large)
-                        .clickable { viewModel.showAddGoalModal() }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(20.dp)
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "+",
-                            fontSize = 48.sp,
-                            color = PokectBankPrimary
-                        )
-                        Text(
-                            text = stringResource(R.string.add_goal_card_text),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PokectBankPrimary,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
+            // Keep one add-goal card at the end when the last block is incomplete.
+            if (uiState.goals.isEmpty() || uiState.goals.size % 3 != 0) {
+                item {
+                    AddGoalCard(onClick = { viewModel.showAddGoalModal() })
                 }
             }
         }
@@ -229,5 +206,50 @@ fun GoalsScreen(
                 viewModel.createGoal(name, icon, targetAmount, daysLeft)
             }
         )
+    }
+}
+
+@Composable
+private fun AddGoalCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = KidShapes.large,
+        colors = CardDefaults.cardColors(containerColor = PokectBankSurface),
+        modifier = modifier
+            .drawBehind {
+                drawRoundRect(
+                    color = PokectBankOutline,
+                    size = size,
+                    cornerRadius = CornerRadius(24f, 24f),
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))
+                    )
+                )
+            }
+            .clip(KidShapes.large)
+            .clickable(onClick = onClick)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "+",
+                fontSize = 48.sp,
+                color = PokectBankPrimary
+            )
+            Text(
+                text = stringResource(R.string.add_goal_card_text),
+                style = MaterialTheme.typography.bodyMedium,
+                color = PokectBankPrimary,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
     }
 }

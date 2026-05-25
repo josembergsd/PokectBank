@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.math.min
 
 class AppRepository(
     private val userDao: UserDao,
@@ -266,19 +267,25 @@ class AppRepository(
             val goal = currentGoals.find { it.id == goalId }
                 ?: return Result.failure(IllegalArgumentException("Goal not found: $goalId"))
 
+            val remainingAmount = (goal.targetAmount - goal.currentAmount).coerceAtLeast(0.0)
+            if (remainingAmount <= 0.0) {
+                return Result.failure(IllegalStateException("Goal already completed"))
+            }
+            val amountToAllocate = min(amount, remainingAmount)
+
             val user = userDao.getUser()
-            if (user.balance < amount) {
+            if (user.balance < amountToAllocate) {
                 return Result.failure(IllegalStateException("Insufficient balance"))
             }
 
-            userDao.updateUser(user.copy(balance = user.balance - amount))
-            savingsGoalDao.updateGoal(goal.copy(currentAmount = goal.currentAmount + amount))
+            userDao.updateUser(user.copy(balance = user.balance - amountToAllocate))
+            savingsGoalDao.updateGoal(goal.copy(currentAmount = goal.currentAmount + amountToAllocate))
             transactionDao.insertTransaction(
                 Transaction(
                     id = "t_${java.util.UUID.randomUUID()}",
                     type = TransactionType.GOAL,
                     title = "Alocação: ${goal.title}",
-                    amount = -amount,
+                    amount = -amountToAllocate,
                     date = java.time.LocalDate.now().toString(),
                     icon = goal.icon
                 )

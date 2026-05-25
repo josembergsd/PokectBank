@@ -42,6 +42,9 @@ class GoalsViewModel(
 
     private suspend fun loadGoalsAndUser() {
         val goals = repository.getGoals()
+            .sortedBy { goal ->
+                if (goal.targetAmount > 0) goal.currentAmount / goal.targetAmount else 1.0
+            }
         val user = repository.getUser()
         _uiState.update { it.copy(goals = goals, user = user) }
     }
