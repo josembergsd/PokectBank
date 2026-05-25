@@ -23,3 +23,8 @@ data class UserProfileDto(
     @SerializedName("email") val email: String,
     @SerializedName("avatar") val avatarId: Int
 )
+
+data class ApiErrorResponse(
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("error") val error: String? = null
+)

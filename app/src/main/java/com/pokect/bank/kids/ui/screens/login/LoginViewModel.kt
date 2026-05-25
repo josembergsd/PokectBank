@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pokect.bank.kids.data.preferences.LoginPreferences
 import com.pokect.bank.kids.data.repository.login.AuthRepository
+import com.google.gson.Gson
+import com.pokect.bank.kids.data.network.ApiErrorResponse
+import retrofit2.HttpException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -143,14 +146,19 @@ class LoginViewModel(
                         avatarId = state.selectedAvatar
                     )
                 }
-                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
                 loginPrefs?.let { prefs ->
                     prefs.setLoggedIn(_uiState.value.selectedAvatar)
                     return@launch
                 }
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
             } catch (e: Exception) {
-                Log.e("LOGIN_VM", "ERROR AUTH", e)
-                _uiState.update { it.copy(isLoading = false, error = "${e.message}") }
+                val errorMessage = (e as? HttpException)?.response()?.errorBody()?.string()?.let {
+                    try { 
+                        Gson().fromJson(it, ApiErrorResponse::class.java).let { res -> res.message ?: res.error }
+                    } catch(_: Exception) { null }
+                } ?: e.message ?: "Erro inesperado"
+                
+                _uiState.update { it.copy(isLoading = false, error = errorMessage) }
             }
         }
     }
