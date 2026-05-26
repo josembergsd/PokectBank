@@ -107,7 +107,7 @@
 
 > "Agora vou explicar como o app funciona por dentro. Usamos a arquitetura **MVVM**: cada tela tem uma ViewModel que expõe um `StateFlow` com o estado da interface. A tela, que é uma função Composable, coleta esse estado com `collectAsStateWithLifecycle` e renderiza a interface.
 >
-> O fluxo de dados é单向: a ViewModel chama métodos do **AppRepository**, que é a camada central de regras de negócio. O repositório escreve no banco, e o Room emite automaticamente novos valores via `Flow`, que o repositório coleta e repassa pras ViewModels.
+> O fluxo de dados é unidirecional: a ViewModel chama métodos do **AppRepository**, que é a camada central de regras de negócio. O repositório escreve no banco, e o Room emite automaticamente novos valores via `Flow`, que o repositório coleta e repassa pras ViewModels.
 >
 > Pra persistência, usamos duas ferramentas oficiais do Android Jetpack:
 >
