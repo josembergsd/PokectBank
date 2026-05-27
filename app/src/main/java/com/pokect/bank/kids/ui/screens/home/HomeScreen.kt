@@ -162,16 +162,6 @@ fun HomeScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                ResetSection(
-                    isResetting = uiState.isResetting,
-                    onResetClick = { viewModel.showResetConfirmation() },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
@@ -180,13 +170,13 @@ fun HomeScreen(
                 onDismissRequest = { viewModel.hideResetConfirmation() },
                 title = {
                     Text(
-                        text = "Resetar dados?",
+                        text = "Deseja realizar o logout?",
                         style = MaterialTheme.typography.headlineSmall
                     )
                 },
                 text = {
                     Text(
-                        text = "Todos os dados serão perdidos. O app voltará ao estado inicial.",
+                        text = "Não se preocupe, você pode voltar a qualquer momento.",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
