@@ -1,6 +1,6 @@
 # PokectBank 🏦
 
-App Android de banco infantil desenvolvido em **Kotlin** + **Jetpack Compose** para simular educação financeira para crianças — com cofrinho, metas de economia, missões, recompensas e ranking familiar.
+App Android de banco infantil desenvolvido em **Kotlin** + **Jetpack Compose** para simular educação financeira para crianças — com cofrinho, metas de economia, missões, recompensas, ranking familiar e autenticação via API REST.
 
 ## Funcionalidades
 
@@ -17,7 +17,8 @@ App Android de banco infantil desenvolvido em **Kotlin** + **Jetpack Compose** p
 
 - **Linguagem:** Kotlin 2.1.0 (Java 17 como target)
 - **UI:** Jetpack Compose (BOM 2024.12.01) com Material 3
-- **Persistência:** Room 2.8.4 (SQLite) para dados do usuário + DataStore Preferences para estado de login
+- **Persistência:** Room 2.8.4 (SQLite) para dados do usuário + DataStore Preferences para estado de login e token JWT
+- **Rede:** Retrofit 2.11.0 + OkHttp 4.12.0 para API REST (autenticação e perfil)
 - **Navegação:** Navigation Compose 2.8.5 (6 telas)
 - **Injeção de Dependência:** Manual via singleton `AppContainer`
 - **Build:** Gradle 9.3.1 (Kotlin DSL) com Version Catalog (`libs.versions.toml`)
@@ -32,11 +33,19 @@ App Android de banco infantil desenvolvido em **Kotlin** + **Jetpack Compose** p
 | DataStore Preferences | 1.2.1 | Persistência chave-valor do login |
 | Navigation Compose | 2.8.5 | Navegação entre telas |
 | Lifecycle ViewModel | 2.8.7 | Integração ViewModel com Compose |
+| Retrofit + Gson | 2.11.0 | Cliente HTTP para API REST |
+| OkHttp + logging | 4.12.0 | Motor HTTP com interceptors |
 
 **Testes:**
 - JUnit 4 + Kotlin Test + kotlinx-coroutines-test
 - Robolectric 4.14.1 (Android no JVM, sem emulador)
-- Banco Room em memória nos testes
+- Banco Room em memória + DataStore em arquivos temporários nos testes
+- 22 arquivos de teste cobrindo DAOs, Repositório, ViewModels e Conversores
+
+**API REST (desenvolvimento local):**
+- Backend em `http://10.0.2.2:8080/` (localhost do emulador Android)
+- Endpoints: `POST /auth/login`, `POST /auth/register`, `GET /user/me`
+- Autenticação via JWT armazenado no DataStore
 
 ## Requisitos para execução
 
@@ -44,6 +53,7 @@ App Android de banco infantil desenvolvido em **Kotlin** + **Jetpack Compose** p
 - **Android SDK Platform 36** (instalado via Android Studio ou `sdkmanager`)
 - **Gradle 9.3.1** (baixado automaticamente pelo wrapper)
 - Dispositivo/emulador **Android 8.0+** (API 26+)
+- Permissão de **Internet** (necessária para API REST) — liberada para `10.0.2.2` e `localhost` em desenvolvimento
 
 ## Como executar
 
@@ -75,10 +85,15 @@ app/src/main/java/com/pokect/bank/kids/
 │   │   ├── PokectBankConverters.kt  # Type converters
 │   │   └── dao/                     # 7 DAOs (User, Transaction, etc.)
 │   ├── models/                      # Entidades Room + enums
+│   ├── network/                     # Retrofit + OkHttp (API REST)
 │   ├── preferences/
-│   │   └── LoginPreferences.kt      # DataStore wrapper
+│   │   └── LoginPreferences.kt      # DataStore (estado de login)
+│   ├── session/
+│   │   └── TokenManager.kt          # DataStore (token JWT)
 │   └── repository/
-│       ├── AppRepository.kt         # Lógica de negócio central
+│       ├── AppRepository.kt         # Lógica de negócio local (Room)
+│       ├── home/HomeRepository.kt   # API de perfil do usuário
+│       ├── login/AuthRepository.kt  # API de autenticação
 │       └── RepositoryEvent.kt       # Eventos cross-screen
 ├── di/
 │   └── AppContainer.kt             # DI manual (singleton)
